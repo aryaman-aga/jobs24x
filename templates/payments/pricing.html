@@ -54,7 +54,11 @@
                 {% else %}
                 <p class="text-xs text-gray-500 mt-1">₹{{ plan.price|floatformat:"0" }} billed monthly</p>
                 {% endif %}
+                {% if user.is_authenticated %}
+                <button onclick="payWithRazorpay({{ plan.id }})" class="mt-4 block w-full py-3 rounded-lg font-semibold transition {% if plan.name == 'monthly' or plan.name == 'yearly' %}bg-blue-600 text-white hover:bg-blue-700{% else %}bg-gray-700 text-gray-300 hover:bg-gray-600{% endif %}">Choose Plan</button>
+                {% else %}
                 <a href="{% url 'signup' %}?plan={{ plan.id }}" class="mt-4 block w-full py-3 rounded-lg font-semibold transition {% if plan.name == 'monthly' or plan.name == 'yearly' %}bg-blue-600 text-white hover:bg-blue-700{% else %}bg-gray-700 text-gray-300 hover:bg-gray-600{% endif %}">Choose Plan</a>
+                {% endif %}
             </div>
             {% empty %}
             <div class="col-span-full text-center text-gray-500 py-12"><p>No plans configured yet.</p></div>
@@ -70,4 +74,86 @@
         <p class="text-center text-xs text-gray-500 mt-8">Browse job titles for free. Subscribe to see full details and apply links.</p>
     </div>
 </section>
+{% endblock %}
+{% block scripts %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+function getCSRF(){
+    if(csrfToken) return csrfToken.value;
+    var m = document.cookie.match(/csrftoken=([^;]+)/);
+    return m ? m[1] : '';
+}
+function payWithRazorpay(planId){
+    var btn = event.target;
+    btn.disabled = true;
+    btn.textContent = 'Please wait...';
+
+    var formData = new FormData();
+    formData.append('plan_id', planId);
+    formData.append('csrfmiddlewaretoken', getCSRF());
+
+    fetch('/pricing/create-order/', {
+        method: 'POST',
+        body: formData,
+        headers: {'X-CSRFToken': getCSRF()},
+    })
+    .then(function(r){ return r.json() })
+    .then(function(data){
+        if(data.error){ alert(data.error); btn.disabled=false; btn.textContent='Choose Plan'; return }
+
+        var options = {
+            key: data.key,
+            amount: data.amount,
+            currency: data.currency,
+            name: data.name,
+            description: data.description,
+            order_id: data.order_id,
+            prefill: data.prefill,
+            theme: { color: '#2563eb' },
+            handler: function(payload){
+                var vData = new FormData();
+                vData.append('razorpay_order_id', payload.razorpay_order_id);
+                vData.append('razorpay_payment_id', payload.razorpay_payment_id);
+                vData.append('razorpay_signature', payload.razorpay_signature);
+                vData.append('csrfmiddlewaretoken', getCSRF());
+
+                fetch('/pricing/verify-payment/', {
+                    method: 'POST',
+                    body: vData,
+                    headers: {'X-CSRFToken': getCSRF()},
+                })
+                .then(function(r){ return r.json() })
+                .then(function(res){
+                    if(res.status === 'success'){
+                        window.location.href = '/dashboard/';
+                    } else {
+                        alert('Payment verification failed: ' + (res.message||'try again'));
+                        btn.disabled=false; btn.textContent='Choose Plan';
+                    }
+                })
+                .catch(function(){
+                    alert('Verification error. Contact support.');
+                    btn.disabled=false; btn.textContent='Choose Plan';
+                });
+            },
+            modal: {
+                ondismiss: function(){
+                    btn.disabled=false; btn.textContent='Choose Plan';
+                }
+            }
+        };
+        var rzp = new Razorpay(options);
+        rzp.on('payment.failed', function(resp){
+            alert('Payment failed: ' + (resp.error.description||'try again'));
+            btn.disabled=false; btn.textContent='Choose Plan';
+        });
+        rzp.open();
+    })
+    .catch(function(){
+        alert('Failed to create order. Try again.');
+        btn.disabled=false; btn.textContent='Choose Plan';
+    });
+}
+</script>
 {% endblock %}
