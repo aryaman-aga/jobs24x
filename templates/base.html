@@ -12,8 +12,6 @@
         @keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
         @keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
         @keyframes pulse-glow{0%,100%{box-shadow:0 0 20px rgba(59,130,246,.15)}50%{box-shadow:0 0 40px rgba(59,130,246,.3)}}
-        @keyframes loader-pulse{0%,100%{opacity:.4;transform:scale(1)}50%{opacity:1;transform:scale(1.08)}}
-        @keyframes loader-blur-out{0%{opacity:1;backdrop-filter:blur(0)}100%{opacity:0;backdrop-filter:blur(12px)}}
         .animate-fade-in{animation:fadeIn .5s ease-out forwards}
         .animate-slide-up{animation:slideUp .6s ease-out forwards}
         .animate-marquee{animation:marquee 40s linear infinite}
@@ -32,19 +30,9 @@
         .dark .bg-card{background:rgb(31 41 55)}
         .scroll-reveal{opacity:0;transform:translateY(20px);transition:all .6s ease-out}
         .scroll-reveal.revealed{opacity:1;transform:translateY(0)}
-        #loader-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#030712;pointer-events:none}
-        #loader-overlay.dismissing{animation:loader-blur-out .6s ease forwards;pointer-events:none!important}
-        .loader-logo{font-size:2rem;font-weight:800;background:linear-gradient(135deg,#60a5fa,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:loader-pulse 2s ease-in-out infinite}
     </style>
 </head>
 <body class="bg-gray-950 text-gray-100 font-sans antialiased">
-
-    <div id="loader-overlay">
-        <div class="text-center">
-            <canvas id="globe-canvas" width="160" height="160"></canvas>
-            <div class="loader-logo mt-4">Jobs24X7</div>
-        </div>
-    </div>
 
     <div id="dark-toggle-init" class="hidden"></div>
 
@@ -173,105 +161,6 @@
         function openJobModal(title,html){document.getElementById('modalTitle').textContent=title;document.getElementById('modalBody').innerHTML=html;document.getElementById('jobModal').classList.add('active');document.body.style.overflow='hidden'}
         function closeJobModal(e){if(e&&e.target!==e.currentTarget)return;document.getElementById('jobModal').classList.remove('active');document.body.style.overflow=''}
         document.addEventListener('keydown',e=>{if(e.key==='Escape')closeJobModal()});
-
-        (function(){
-            var overlay=document.getElementById('loader-overlay');
-            var loaded=false,shownAt=Date.now();
-
-            function drawGlobe(){
-                var c=document.getElementById('globe-canvas');
-                if(!c)return;
-                var ctx=c.getContext('2d');
-                var cx=80,cy=80,R=60;
-                var time=Date.now()/5000;
-
-                ctx.clearRect(0,0,160,160);
-
-                var grad=ctx.createRadialGradient(40,50,5,80,80,R+20);
-                grad.addColorStop(0,'rgba(96,165,250,.3)');
-                grad.addColorStop(1,'rgba(96,165,250,0)');
-                ctx.fillStyle=grad;
-                ctx.beginPath();
-                ctx.arc(cx,cy,R+20,0,Math.PI*2);
-                ctx.fill();
-
-                ctx.save();
-                ctx.beginPath();
-                ctx.arc(cx,cy,R,0,Math.PI*2);
-                ctx.clip();
-
-                var g=ctx.createRadialGradient(40,50,10,cx,cy,R);
-                g.addColorStop(0,'#1e3a5f');
-                g.addColorStop(.5,'#0f1b2e');
-                g.addColorStop(1,'#030712');
-                ctx.fillStyle=g;
-                ctx.beginPath();
-                ctx.arc(cx,cy,R,0,Math.PI*2);
-                ctx.fill();
-
-                for(var i=0;i<6;i++){
-                    var lat=(i/6)*Math.PI;
-                    ctx.beginPath();
-                    for(var a=0;a<=Math.PI*2;a+=.05){
-                        var x=cx+R*Math.sin(lat)*Math.cos(a+time);
-                        var y=cy-R*Math.cos(lat);
-                        a===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
-                    }
-                    ctx.strokeStyle='rgba(96,165,250,.25)';
-                    ctx.lineWidth=.6;
-                    ctx.stroke();
-                }
-
-                for(var i=0;i<8;i++){
-                    var lon=(i/8)*Math.PI*2;
-                    ctx.beginPath();
-                    for(var a=-Math.PI/2;a<=Math.PI/2;a+=.03){
-                        var x=cx+R*Math.cos(a)*Math.sin(lon+time);
-                        var y=cy-R*Math.sin(a);
-                        a===-Math.PI/2?ctx.moveTo(x,y):ctx.lineTo(x,y);
-                    }
-                    ctx.strokeStyle='rgba(96,165,250,.2)';
-                    ctx.lineWidth=.5;
-                    ctx.stroke();
-                }
-
-                var hg=ctx.createRadialGradient(20,20,5,cx,cy,R);
-                hg.addColorStop(0,'rgba(167,139,250,.12)');
-                hg.addColorStop(1,'rgba(167,139,250,0)');
-                ctx.fillStyle=hg;
-                ctx.beginPath();
-                ctx.arc(cx,cy,R,0,Math.PI*2);
-                ctx.fill();
-
-                ctx.restore();
-
-                ctx.beginPath();
-                ctx.arc(cx,cy,R,0,Math.PI*2);
-                ctx.strokeStyle='rgba(96,165,250,.15)';
-                ctx.lineWidth=1;
-                ctx.stroke();
-            }
-
-            function animate(){
-                if(overlay.style.display==='none')return;
-                drawGlobe();
-                requestAnimationFrame(animate);
-            }
-            animate();
-
-            function maybeHide(){
-                if(!loaded)return;
-                var elapsed=Date.now()-shownAt;
-                if(elapsed<5000){setTimeout(maybeHide,5000-elapsed);return}
-                overlay.classList.add('dismissing');
-                setTimeout(function(){
-                    overlay.style.display='none';
-                },700);
-            }
-
-            if(document.readyState==='complete'){loaded=true;setTimeout(maybeHide,200)}
-            else{window.addEventListener('load',function(){loaded=true;setTimeout(maybeHide,200)})}
-        })();
     </script>
     {% block scripts %}{% endblock %}
 </body>

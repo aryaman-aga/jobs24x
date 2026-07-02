@@ -7,7 +7,7 @@ services:
     region: ohio
     branch: main
     healthCheckPath: /health/
-    buildCommand: pip install -r requirements.txt && python manage.py migrate --noinput && python manage.py collectstatic --noinput
+    buildCommand: pip install -r requirements.txt && python manage.py migrate --noinput && python manage.py ensure_admin --noinput && python manage.py setup_social_app --noinput && python manage.py collectstatic --noinput
     startCommand: gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120
     envVars:
       - key: DJANGO_SECRET_KEY
@@ -46,6 +46,14 @@ services:
         sync: false
       - key: RAZORPAY_KEY_SECRET
         sync: false
+      - key: DJANGO_SUPERUSER_EMAIL
+        sync: false
+      - key: DJANGO_SUPERUSER_PASSWORD
+        sync: false
+      - key: SITE_DOMAIN
+        value: jobs24x7.onrender.com
+      - key: SITE_NAME
+        value: Jobs24X7
       - key: SENDGRID_API_KEY
         sync: false
       - key: GOOGLE_OAUTH_CLIENT_ID
