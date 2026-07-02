@@ -18,21 +18,27 @@
         {% endif %}
 
         <form method="get" class="mt-8">
-            <div class="flex flex-wrap justify-center gap-2 mb-4">
-                <button type="submit" name="mode" value="" class="px-4 py-2 rounded-full text-sm font-medium transition {% if not current_mode %}bg-blue-600 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700{% endif %}">All modes</button>
-                {% for key, label in modes %}
-                <button type="submit" name="mode" value="{{ key }}" class="px-4 py-2 rounded-full text-sm font-medium transition {% if current_mode == key %}bg-blue-600 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700{% endif %}">{{ label }}</button>
-                {% endfor %}
+            <div class="overflow-x-auto scrollbar-thin -mx-1 px-1 mb-4">
+                <div class="flex justify-center gap-2 min-w-max">
+                    <button type="submit" name="mode" value="" class="px-4 py-2 rounded-full text-sm font-medium transition whitespace-nowrap {% if not current_mode %}bg-blue-600 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700{% endif %}">All modes</button>
+                    {% for key, label in modes %}
+                    <button type="submit" name="mode" value="{{ key }}" class="px-4 py-2 rounded-full text-sm font-medium transition whitespace-nowrap {% if current_mode == key %}bg-blue-600 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700{% endif %}">{{ label }}</button>
+                    {% endfor %}
+                </div>
             </div>
-            <div class="flex flex-wrap justify-center gap-2 mb-4">
-                <button type="submit" name="status" value="" class="px-4 py-2 rounded-full text-sm font-medium transition {% if not current_status %}bg-blue-600 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700{% endif %}">All</button>
-                <button type="submit" name="status" value="upcoming" class="px-4 py-2 rounded-full text-sm font-medium transition {% if current_status == 'upcoming' %}bg-blue-600 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700{% endif %}">Upcoming</button>
-                <button type="submit" name="status" value="closing" class="px-4 py-2 rounded-full text-sm font-medium transition {% if current_status == 'closing' %}bg-blue-600 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700{% endif %}">Closing soon</button>
+            <div class="overflow-x-auto scrollbar-thin -mx-1 px-1 mb-4">
+                <div class="flex justify-center gap-2 min-w-max">
+                    <button type="submit" name="status" value="" class="px-4 py-2 rounded-full text-sm font-medium transition whitespace-nowrap {% if not current_status %}bg-blue-600 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700{% endif %}">All</button>
+                    <button type="submit" name="status" value="upcoming" class="px-4 py-2 rounded-full text-sm font-medium transition whitespace-nowrap {% if current_status == 'upcoming' %}bg-blue-600 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700{% endif %}">Upcoming</button>
+                    <button type="submit" name="status" value="closing" class="px-4 py-2 rounded-full text-sm font-medium transition whitespace-nowrap {% if current_status == 'closing' %}bg-blue-600 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700{% endif %}">Closing soon</button>
+                </div>
             </div>
-            <div class="flex flex-wrap justify-center gap-2">
-                {% for key, label in categories %}
-                <button type="submit" name="category" value="{{ key }}" class="px-3 py-1 rounded-full text-xs font-medium transition {% if current_category == key %}bg-blue-600 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700{% endif %}">{{ label }}</button>
-                {% endfor %}
+            <div class="overflow-x-auto scrollbar-thin -mx-1 px-1">
+                <div class="flex justify-center gap-2 min-w-max">
+                    {% for key, label in categories %}
+                    <button type="submit" name="category" value="{{ key }}" class="px-3 py-1 rounded-full text-xs font-medium transition whitespace-nowrap {% if current_category == key %}bg-blue-600 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700{% endif %}">{{ label }}</button>
+                    {% endfor %}
+                </div>
             </div>
         </form>
 

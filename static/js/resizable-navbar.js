@@ -3,14 +3,16 @@
 
   function initResizableNavbar(navEl) {
     if (!navEl) return;
+    var isMobile = window.innerWidth < 1024;
     var scrollThreshold = 100;
     var ticking = false;
     var mobileToggle = navEl.querySelector('.rn-mobile-toggle');
     var mobileMenu = navEl.querySelector('.rn-mobile-menu');
     var items = navEl.querySelectorAll('.rn-item');
 
-    /* ── Scroll shrink ── */
+    /* ── Scroll shrink (desktop only) ── */
     function onScroll() {
+      if (isMobile) return;
       if (!ticking) {
         requestAnimationFrame(function () {
           var shouldShrink = window.scrollY > scrollThreshold;
@@ -21,7 +23,7 @@
       }
     }
     window.addEventListener('scroll', onScroll, { passive: true });
-    onScroll();
+    if (!isMobile) onScroll();
 
     /* ── Mobile menu toggle ── */
     if (mobileToggle && mobileMenu) {

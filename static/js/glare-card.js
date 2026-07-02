@@ -2,6 +2,7 @@
   'use strict';
 
   function initGlareCards(container) {
+    if (window.matchMedia('(pointer: coarse)').matches) return;
     var cards = (container || document).querySelectorAll('.glare-card');
     cards.forEach(function (card) {
       var state = {

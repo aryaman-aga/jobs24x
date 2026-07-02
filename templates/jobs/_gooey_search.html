@@ -3,10 +3,12 @@
 <div id="gooey-search-root"></div>
 <script src="{% static 'js/gooey-input.js' %}"></script>
 <script>
-  new GooeySearch(document.getElementById('gooey-search-root'), {
+  var gooeyContainer = document.getElementById('gooey-search-root');
+  var gooeyExpanded = Math.min(300, (gooeyContainer.parentElement.offsetWidth || 300) - 32);
+  new GooeySearch(gooeyContainer, {
     placeholder: 'Search jobs, companies, keywords...',
     collapsedWidth: 52,
-    expandedWidth: 300,
+    expandedWidth: gooeyExpanded > 52 ? gooeyExpanded : 200,
     actionUrl: '{% url "job_list" %}?q=',
   });
 </script>

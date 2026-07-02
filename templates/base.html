@@ -30,6 +30,11 @@
         .dark .bg-card{background:rgb(31 41 55)}
         .scroll-reveal{opacity:0;transform:translateY(20px);transition:all .6s ease-out}
         .scroll-reveal.revealed{opacity:1;transform:translateY(0)}
+        @media(pointer:coarse){.glare-card{perspective:none!important}.glare-card-inner{transform:none!important}.glare-foil,.glare-spotlight{display:none!important}.glare-content{padding:1rem!important}}
+        @supports not (gap:0px){.flex.gap-1\\.5>*{margin-right:6px}.flex.gap-1\\.5>*:last-child{margin-right:0}.flex.gap-2>*{margin-right:8px}.flex.gap-2>*:last-child{margin-right:0}.flex.gap-3>*{margin-right:12px}.flex.gap-3>*:last-child{margin-right:0}}
+        @media(max-width:480px){.top-banner-text{font-size:11px}.top-banner-text .banner-cta{font-size:11px}}
+        .modal-close-btn{width:44px;height:44px;display:flex;align-items:center;justify-content:center}
+        .footer-link{display:block;padding:8px 0;min-height:44px}
     </style>
 </head>
 <body class="bg-gray-950 text-gray-100 font-sans antialiased">
@@ -37,10 +42,10 @@
     <div id="dark-toggle-init" class="hidden"></div>
 
     {% block top_banner %}
-    <div class="bg-gradient-to-r from-blue-600/90 to-indigo-700/90 text-white text-center py-2 text-sm font-medium backdrop-blur-sm">
-        <span>Weekly plan closing on 30 July · Try now or regret later</span>
-        <span id="countdown" class="ml-2 font-mono text-yellow-300"></span>
-        <a href="{% url 'pricing' %}" class="ml-3 underline decoration-yellow-400 decoration-2 font-semibold hover:text-yellow-200 transition">Grab it now →</a>
+    <div class="bg-gradient-to-r from-blue-600/90 to-indigo-700/90 text-white text-center py-2 text-sm font-medium backdrop-blur-sm overflow-hidden whitespace-nowrap">
+        <span class="top-banner-text inline-block sm:text-sm text-[11px] px-1">Weekly plan closing on 30 July · Try now or regret later</span>
+        <span id="countdown" class="top-banner-text inline-block font-mono text-yellow-300 ml-1 sm:ml-2"></span>
+        <a href="{% url 'pricing' %}" class="banner-cta ml-1 sm:ml-3 underline decoration-yellow-400 decoration-2 font-semibold hover:text-yellow-200 transition whitespace-nowrap">Grab it now →</a>
     </div>
     {% endblock %}
 
@@ -107,28 +112,28 @@
                 </div>
                 <div>
                     <h4 class="text-white font-semibold mb-4">Product</h4>
-                    <ul class="space-y-2 text-sm">
-                        <li><a href="{% url 'job_list' %}" class="text-gray-400 hover:text-white transition">Job Search</a></li>
-                        <li><a href="{% url 'hackathon_list' %}" class="text-gray-400 hover:text-white transition">Hackathons</a></li>
-                        <li><a href="{% url 'pricing' %}" class="text-gray-400 hover:text-white transition">Pricing</a></li>
-                        <li><a href="{% url 'alert_list' %}" class="text-gray-400 hover:text-white transition">Alerts</a></li>
-                        <li><a href="{% url 'affiliate_home' %}" class="text-gray-400 hover:text-white transition">Affiliate Program</a></li>
+                    <ul class="text-sm">
+                        <li><a href="{% url 'job_list' %}" class="footer-link text-gray-400 hover:text-white transition">Job Search</a></li>
+                        <li><a href="{% url 'hackathon_list' %}" class="footer-link text-gray-400 hover:text-white transition">Hackathons</a></li>
+                        <li><a href="{% url 'pricing' %}" class="footer-link text-gray-400 hover:text-white transition">Pricing</a></li>
+                        <li><a href="{% url 'alert_list' %}" class="footer-link text-gray-400 hover:text-white transition">Alerts</a></li>
+                        <li><a href="{% url 'affiliate_home' %}" class="footer-link text-gray-400 hover:text-white transition">Affiliate Program</a></li>
                     </ul>
                 </div>
                 <div>
                     <h4 class="text-white font-semibold mb-4">Company</h4>
-                    <ul class="space-y-2 text-sm">
-                        <li><a href="{% url 'about' %}" class="text-gray-400 hover:text-white transition">About</a></li>
-                        <li><a href="{% url 'blog_list' %}" class="text-gray-400 hover:text-white transition">Blog</a></li>
-                        <li><a href="{% url 'careers' %}" class="text-gray-400 hover:text-white transition">Careers</a></li>
+                    <ul class="text-sm">
+                        <li><a href="{% url 'about' %}" class="footer-link text-gray-400 hover:text-white transition">About</a></li>
+                        <li><a href="{% url 'blog_list' %}" class="footer-link text-gray-400 hover:text-white transition">Blog</a></li>
+                        <li><a href="{% url 'careers' %}" class="footer-link text-gray-400 hover:text-white transition">Careers</a></li>
                     </ul>
                 </div>
                 <div>
                     <h4 class="text-white font-semibold mb-4">Legal</h4>
-                    <ul class="space-y-2 text-sm">
-                        <li><a href="{% url 'privacy' %}" class="text-gray-400 hover:text-white transition">Privacy</a></li>
-                        <li><a href="{% url 'terms' %}" class="text-gray-400 hover:text-white transition">Terms</a></li>
-                        <li><a href="{% url 'contact' %}" class="text-gray-400 hover:text-white transition">Contact</a></li>
+                    <ul class="text-sm">
+                        <li><a href="{% url 'privacy' %}" class="footer-link text-gray-400 hover:text-white transition">Privacy</a></li>
+                        <li><a href="{% url 'terms' %}" class="footer-link text-gray-400 hover:text-white transition">Terms</a></li>
+                        <li><a href="{% url 'contact' %}" class="footer-link text-gray-400 hover:text-white transition">Contact</a></li>
                     </ul>
                 </div>
             </div>
@@ -142,7 +147,7 @@
         <div class="modal-content bg-gray-900 border border-gray-700 rounded-2xl max-w-2xl w-full mx-4 max-h-[85vh] overflow-y-auto shadow-2xl" onclick="event.stopPropagation()">
             <div class="sticky top-0 bg-gray-900 border-b border-gray-700 p-4 flex justify-between items-center rounded-t-2xl">
                 <h3 id="modalTitle" class="text-lg font-bold text-white pr-4"></h3>
-                <button onclick="closeJobModal()" class="text-gray-400 hover:text-white transition text-2xl leading-none">&times;</button>
+                <button onclick="closeJobModal()" class="modal-close-btn text-gray-400 hover:text-white transition text-3xl leading-none rounded-lg">&times;</button>
             </div>
             <div class="p-6" id="modalBody"></div>
         </div>
@@ -158,9 +163,11 @@
         function revealOnScroll(){document.querySelectorAll('.scroll-reveal').forEach(e=>{const t=e.getBoundingClientRect();t.top<window.innerHeight-80&&e.classList.add('revealed')})}
         window.addEventListener('scroll',revealOnScroll);revealOnScroll();
 
-        function openJobModal(title,html){document.getElementById('modalTitle').textContent=title;document.getElementById('modalBody').innerHTML=html;document.getElementById('jobModal').classList.add('active');document.body.style.overflow='hidden'}
-        function closeJobModal(e){if(e&&e.target!==e.currentTarget)return;document.getElementById('jobModal').classList.remove('active');document.body.style.overflow=''}
+        function openJobModal(title,html){var m=document.getElementById('jobModal');document.getElementById('modalTitle').textContent=title;document.getElementById('modalBody').innerHTML=html;m.classList.add('active');document.body.style.overflow='hidden';m.addEventListener('touchmove',preventOverscroll,{passive:false})}
+        function closeJobModal(e){if(e&&e.target!==e.currentTarget)return;var m=document.getElementById('jobModal');m.classList.remove('active');document.body.style.overflow='';m.removeEventListener('touchmove',preventOverscroll)}
+        function preventOverscroll(e){var t=document.querySelector('.modal-content');if(t&&t.scrollHeight>t.clientHeight)return;e.preventDefault()}
         document.addEventListener('keydown',e=>{if(e.key==='Escape')closeJobModal()});
+        if(!CSS.supports('gap','0px')){document.querySelectorAll('.flex').forEach(function(el){var c=getComputedStyle(el).gap;if(c&&c!=='normal'){var v=parseInt(c);if(v)el.style.setProperty('--gap',v+'px')}})}
     </script>
     {% block scripts %}{% endblock %}
 </body>
