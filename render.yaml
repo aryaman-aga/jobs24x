@@ -57,4 +57,4 @@ databases:
   - name: jobs24x7-db
     plan: free
     region: singapore
-    type: postgresql
+    type: postgres
