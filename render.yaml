@@ -57,4 +57,3 @@ databases:
   - name: jobs24x7-db
     plan: free
     region: ohio
-    type: postgres
