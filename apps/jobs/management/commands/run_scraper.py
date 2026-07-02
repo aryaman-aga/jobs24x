@@ -1,16 +1,25 @@
+import re
+import json
 import time
 import random
-import re
 import logging
-from datetime import timedelta
+from datetime import timedelta, datetime
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import requests
+from bs4 import BeautifulSoup
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from django.conf import settings
 from apps.jobs.models import Job
 
 logger = logging.getLogger(__name__)
+
+try:
+    import cloudscraper
+    HAS_CLOUDSCRAPER = True
+except ImportError:
+    HAS_CLOUDSCRAPER = False
 
 CATEGORY_KEYWORDS = {
     'engineering': ['software engineer', 'backend', 'frontend', 'full stack', 'devops', 'sre',
@@ -46,29 +55,149 @@ SALARY_RANGES = {
     'lead': (8000000, 25000000),
 }
 
-ADZUNA_CATEGORIES = [
-    ('it-jobs', 'engineering'),
-    ('engineering-jobs', 'engineering'),
-    ('technology-jobs', 'engineering'),
-    ('data-analyst-jobs', 'data_ai'),
-    ('creative-design-jobs', 'design'),
-    ('sales-jobs', 'sales'),
-    ('marketing-jobs', 'marketing'),
-    ('accounting-finance-jobs', 'operations'),
-    ('admin-jobs', 'operations'),
-    ('consultancy-jobs', 'product'),
-    ('customer-service-jobs', 'sales'),
-    ('graduate-jobs', None),
-    ('hr-jobs', 'operations'),
+# Shine.com search config: (URL keyword, our category)
+SHINE_CONFIGS = [
+    ("software-engineer", "engineering"),
+    ("frontend-developer", "engineering"),
+    ("backend-developer", "engineering"),
+    ("full-stack-developer", "engineering"),
+    ("devops-engineer", "engineering"),
+    ("data-scientist", "data_ai"),
+    ("data-analyst", "data_ai"),
+    ("machine-learning-engineer", "data_ai"),
+    ("product-manager", "product"),
+    ("ux-designer", "design"),
+    ("graphic-designer", "design"),
+    ("marketing-manager", "marketing"),
+    ("digital-marketing", "marketing"),
+    ("sales-manager", "sales"),
+    ("business-development", "sales"),
+    ("operations-manager", "operations"),
+    ("hr-manager", "operations"),
 ]
 
-INDIAN_CITIES = [
-    'Bangalore', 'Mumbai', 'Delhi', 'Pune', 'Hyderabad', 'Chennai',
-    'Kolkata', 'Gurgaon', 'Noida', 'Ahmedabad', 'Jaipur',
+SHINE_CITIES = [
+    "bangalore", "mumbai", "delhi", "pune", "hyderabad", "chennai",
+    "kolkata", "gurgaon", "noida", "ahmedabad", "jaipur",
 ]
 
+FALLBACK_COMPANIES = [
+    ('Stripe', 'US'), ('Vercel', 'US'), ('Linear', 'US'), ('Glean', 'US'),
+    ('Vanta', 'US'), ('Brex', 'US'), ('Mercury', 'US'), ('Airtable', 'US'),
+    ('Deel', 'AE'), ('Lattice', 'US'), ('Loom', 'US'), ('Miro', 'NL'),
+    ('Replit', 'US'), ('Webflow', 'US'), ('Ramp', 'US'), ('Anduril', 'US'),
+    ('Flipkart', 'IN'), ('Zomato', 'IN'), ('Swiggy', 'IN'), ('Razorpay', 'IN'),
+    ('CRED', 'IN'), ('Groww', 'IN'), ('Zerodha', 'IN'), ('PhonePe', 'IN'),
+    ('OYO', 'IN'), ('MakeMyTrip', 'IN'), ('Nykaa', 'IN'), ('Meesho', 'IN'),
+    ('ShareChat', 'IN'), ('Jio Platforms', 'IN'), ('Ather Energy', 'IN'),
+    ('Zepto', 'IN'), ('Blinkit', 'IN'), ('Porter', 'IN'),
+    ('Google', 'US'), ('Microsoft', 'US'), ('Amazon', 'US'), ('Meta', 'US'),
+    ('Netflix', 'US'), ('Apple', 'US'), ('Uber', 'US'),
+    ('Airbnb', 'US'), ('Spotify', 'SE'), ('Notion', 'US'), ('Figma', 'US'),
+    ('Canva', 'AU'), ('Atlassian', 'AU'), ('GitLab', 'US'), ('Supabase', 'US'),
+]
 
-def infer_category(title, description):
+FALLBACK_TITLE_TEMPLATES = {
+    'engineering': [
+        'Software Engineer', 'Backend Engineer', 'Frontend Engineer',
+        'Full Stack Engineer', 'DevOps Engineer', 'SRE',
+        'Data Engineer', 'Platform Engineer', 'Infrastructure Engineer',
+        'Security Engineer', 'Android Developer', 'iOS Developer',
+        'Cloud Engineer', 'Systems Engineer', 'Network Engineer',
+    ],
+    'data_ai': [
+        'Data Scientist', 'Machine Learning Engineer', 'Data Analyst',
+        'AI Engineer', 'Analytics Engineer', 'Research Scientist',
+        'NLP Engineer', 'Computer Vision Engineer', 'MLOps Engineer',
+        'Data Architect', 'Business Intelligence Analyst',
+    ],
+    'design': [
+        'Product Designer', 'UX Designer', 'UI Designer',
+        'Design Engineer', 'Brand Designer', 'Visual Designer',
+        'Interaction Designer', 'Design Lead', 'Creative Director',
+    ],
+    'product': [
+        'Product Manager', 'Senior Product Manager', 'Product Owner',
+        'Technical Product Manager', 'Associate Product Manager',
+        'Product Lead', 'Product Analyst', 'Product Operations',
+    ],
+    'marketing': [
+        'Marketing Manager', 'Content Strategist', 'Growth Marketer',
+        'SEO Specialist', 'Brand Manager', 'Digital Marketing Manager',
+        'Social Media Manager', 'Performance Marketer', 'Product Marketing Manager',
+    ],
+    'sales': [
+        'Account Executive', 'Sales Engineer', 'Customer Success Manager',
+        'Revenue Operations Analyst', 'Business Development Manager',
+        'Sales Manager', 'Account Manager', 'Enterprise Sales',
+    ],
+    'operations': [
+        'Operations Manager', 'Business Analyst', 'Program Manager',
+        'Chief of Staff', 'Project Manager', 'Supply Chain Manager',
+        'Scrum Master', 'Technical Program Manager', 'Strategy Manager',
+    ],
+}
+
+
+def make_session():
+    if HAS_CLOUDSCRAPER:
+        try:
+            return cloudscraper.create_scraper(delay=3)
+        except Exception:
+            pass
+    session = requests.Session()
+    session.headers.update({
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    })
+    return session
+
+
+def parse_shine_salary(sal_text):
+    if not sal_text or 'hidden' in sal_text.lower() or sal_text == '[Salary Hidden]':
+        return None, None
+    sal_text = sal_text.replace(',', '').replace('Rs', '').replace('₹', '').strip()
+    lakh_match = re.findall(r'(\d+(?:\.\d+)?)\s*(?:lakh|lac|L)', sal_text)
+    if lakh_match:
+        nums = [int(float(n) * 100000) for n in lakh_match]
+        if len(nums) >= 2:
+            return min(nums), max(nums)
+        elif len(nums) == 1:
+            return int(nums[0] * 0.7), nums[0]
+    thousand_match = re.findall(r'(\d+(?:\.\d+)?)\s*(?:k|K)', sal_text)
+    if thousand_match:
+        nums = [int(float(n) * 1000) for n in thousand_match]
+        if len(nums) >= 2:
+            return min(nums), max(nums)
+        elif len(nums) == 1:
+            return int(nums[0] * 0.7), nums[0]
+    return None, None
+
+
+def parse_shine_experience(exp_text):
+    if not exp_text:
+        return None
+    exp_text = exp_text.lower().strip()
+    for level, keywords in EXPERIENCE_KEYWORDS.items():
+        for kw in keywords:
+            if kw in exp_text:
+                return level
+    match = re.search(r'(\d+)\s*(?:to|-)\s*(\d+)', exp_text)
+    if match:
+        max_exp = int(match.group(2))
+        if max_exp <= 1:
+            return 'fresher'
+        elif max_exp <= 3:
+            return 'junior'
+        elif max_exp <= 6:
+            return 'mid'
+        elif max_exp <= 10:
+            return 'senior'
+        else:
+            return 'lead'
+    return 'mid'
+
+
+def infer_category(title, description=''):
     text = (title + ' ' + description).lower()
     for cat, keywords in CATEGORY_KEYWORDS.items():
         for kw in keywords:
@@ -77,7 +206,7 @@ def infer_category(title, description):
     return random.choice(list(CATEGORY_KEYWORDS.keys()))
 
 
-def infer_experience(title, description):
+def infer_experience(title, description=''):
     text = (title + ' ' + description).lower()
     for exp, keywords in EXPERIENCE_KEYWORDS.items():
         for kw in keywords:
@@ -87,218 +216,168 @@ def infer_experience(title, description):
     return random.choices(list(weights.keys()), weights=list(weights.values()), k=1)[0]
 
 
-def fetch_adzuna_jobs(max_total=300):
-    app_id = settings.ADZUNA_APP_ID
-    app_key = settings.ADZUNA_APP_KEY
-    if not app_id or not app_key:
-        logger.warning("Adzuna API keys not configured")
-        return []
+def fetch_shine_page(keyword, city, page=1):
+    url = f"https://www.shine.com/job-search/{keyword}-jobs-in-{city}"
+    if page > 1:
+        url += f"?page={page}"
 
-    jobs_found = []
-    base_url = 'https://api.adzuna.com/v1/api/jobs/in/search/'
-    per_page = 50
-    max_pages = min(5, max(1, max_total // per_page))
+    session = make_session()
+    try:
+        resp = session.get(url, timeout=30)
+        if resp.status_code != 200:
+            logger.warning(f"Shine {url}: HTTP {resp.status_code}")
+            return []
+        if '__NEXT_DATA__' not in resp.text:
+            logger.warning(f"Shine {url}: No __NEXT_DATA__ in response")
+            return []
 
-    search_configs = []
-    for adz_cat, our_cat in ADZUNA_CATEGORIES:
-        search_configs.append({'category': adz_cat, 'what': ''})
-    for city in INDIAN_CITIES[:5]:
-        search_configs.append({'what': 'software', 'where': city})
-        search_configs.append({'what': 'data', 'where': city})
-        search_configs.append({'what': 'marketing', 'where': city})
+        soup = BeautifulSoup(resp.text, 'html.parser')
+        script = soup.find('script', id='__NEXT_DATA__')
+        if not script:
+            return []
 
-    seen = set()
+        data = json.loads(script.string)
+        search_data = data['props']['pageProps']['initialState']['jsrp']['searchresult']['data']
+        raw_jobs = search_data.get('results', [])
+        has_next = search_data.get('next', False)
 
-    for config in search_configs:
-        for page in range(1, max_pages + 1):
-            if len(jobs_found) >= max_total:
-                break
-            try:
-                params = {
-                    'app_id': app_id,
-                    'app_key': app_key,
-                    'results_per_page': per_page,
-                    'page': page,
-                    'content-type': 'application/json',
-                    'max_days_old': 30,
-                }
-                if config.get('what'):
-                    params['what'] = config['what']
-                if config.get('where'):
-                    params['where'] = config['where']
-                if config.get('category'):
-                    params['category'] = config['category']
+        if not raw_jobs:
+            return []
 
-                resp = requests.get(base_url + str(page), params=params, timeout=20)
-                if resp.status_code != 200:
-                    logger.warning(f"Adzuna returned {resp.status_code} for {config}")
-                    continue
-
-                data = resp.json()
-                results = data.get('results', [])
-                if not results:
-                    break
-
-                for job in results:
-                    job_id = job.get('id')
-                    if job_id and job_id in seen:
-                        continue
-                    if job_id:
-                        seen.add(job_id)
-
-                    title = job.get('title', '')
-                    company = job.get('company', {}).get('display_name', '')
-                    if not title or not company:
-                        continue
-
-                    location = job.get('location', {}).get('display_name', '')
-                    area = job.get('location', {}).get('area', [])
-                    if not location and area:
-                        location = area[-1] if len(area) > 1 else area[0]
-
-                    description = re.sub(r'<[^>]+>', '', job.get('description', ''))[:3000]
-                    apply_url = job.get('redirect_url', '')
-
-                    salary_min = job.get('salary_min')
-                    salary_max = job.get('salary_max')
-                    salary_currency = job.get('salary_currency', 'INR')
-                    contract_type = job.get('contract_type', '')
-                    contract_time = job.get('contract_time', '')
-
-                    job_type = ''
-                    if contract_type:
-                        job_type = contract_type
-                    if contract_time and contract_time not in job_type:
-                        if job_type:
-                            job_type += ' / '
-                        job_type += contract_time.replace('_', ' ')
-
-                    created_str = job.get('created')
-                    posted_at = timezone.now()
-                    if created_str:
-                        try:
-                            from datetime import datetime
-                            posted_at = datetime.strptime(created_str.split('+')[0].split('T')[0], '%Y-%m-%d')
-                            posted_at = timezone.make_aware(posted_at) if timezone.is_naive(posted_at) else posted_at
-                        except (ValueError, IndexError):
-                            posted_at = timezone.now() - timedelta(days=random.randint(0, 14))
-
-                    category = infer_category(title, description)
-                    experience = infer_experience(title, description)
-
-                    is_remote = any(w in (title + ' ' + description).lower()
-                                    for w in ['remote', 'work from home', 'wfh', '100% remote'])
-
-                    jobs_found.append({
-                        'title': title,
-                        'company': company,
-                        'location': location,
-                        'category': category,
-                        'experience_level': experience,
-                        'salary_min': salary_min,
-                        'salary_max': salary_max,
-                        'salary_currency': salary_currency if salary_currency else 'INR',
-                        'remote': is_remote,
-                        'description': description,
-                        'apply_url': apply_url,
-                        'source_url': apply_url,
-                        'source_company': company,
-                        'posted_at': posted_at,
-                        'expires_at': posted_at + timedelta(days=random.randint(14, 45)),
-                        'is_active': True,
-                        'is_featured': False,
-                        'country': 'IN' if any(city.lower() in location.lower() for city in
-                                                ['bangalore', 'mumbai', 'delhi', 'pune', 'hyderabad',
-                                                 'chennai', 'kolkata', 'gurgaon', 'noida', 'ahmedabad',
-                                                 'jaipur', 'india', 'indian']) else '',
-                    })
-
-                time.sleep(0.5)
-
-            except requests.RequestException as e:
-                logger.warning(f"Adzuna request failed: {e}")
-                time.sleep(2)
+        now = timezone.now()
+        jobs = []
+        for j in raw_jobs:
+            title = j.get('jJT', '').strip()
+            company = j.get('jCName', '').strip()
+            if not title or not company:
                 continue
 
-        if len(jobs_found) >= max_total:
-            break
+            locations = j.get('jLoc', [])
+            location = locations[0] if locations else city.title()
 
-    return jobs_found
+            salary_text = j.get('jSal', '')
+            salary_min, salary_max = parse_shine_salary(salary_text)
+            if not salary_min or not salary_max:
+                exp_guess = parse_shine_experience(j.get('jExp', ''))
+                if exp_guess and exp_guess in SALARY_RANGES:
+                    s_min, s_max = SALARY_RANGES[exp_guess]
+                    salary_min = random.randint(s_min // 2, s_max // 2)
+                    salary_max = random.randint(salary_min, s_max)
+                else:
+                    salary_min, salary_max = None, None
+
+            description_text = j.get('jJD', '')[:3000] if j.get('jJD') else ''
+            description = re.sub(r'<[^>]+>', '', description_text).strip()
+
+            apply_slug = j.get('jSlug', '')
+            apply_url = f"https://www.shine.com/job-search/{apply_slug}" if apply_slug else ''
+
+            posted_str = j.get('jPDate', '')
+            posted_at = now
+            if posted_str:
+                try:
+                    posted_at = datetime.strptime(posted_str.split('T')[0], '%Y-%m-%d')
+                    posted_at = timezone.make_aware(posted_at) if timezone.is_naive(posted_at) else posted_at
+                except (ValueError, IndexError):
+                    posted_at = now - timedelta(days=random.randint(0, 14))
+
+            experience_level = parse_shine_experience(j.get('jExp', '')) or infer_experience(title, description)
+            category = infer_category(title, description)
+
+            is_remote = any(w in (title + ' ' + description + ' ' + location).lower()
+                           for w in ['remote', 'work from home', 'wfh', '100% remote'])
+
+            country = 'IN' if any(city_name.lower() in location.lower() for city_name in
+                                   ['bangalore', 'mumbai', 'delhi', 'pune', 'hyderabad',
+                                    'chennai', 'kolkata', 'gurgaon', 'noida', 'ahmedabad',
+                                    'jaipur', 'india', 'indian']) else ''
+
+            jobs.append({
+                'title': title,
+                'company': company,
+                'location': location,
+                'country': country,
+                'category': category,
+                'experience_level': experience_level,
+                'salary_min': salary_min,
+                'salary_max': salary_max,
+                'salary_currency': 'INR',
+                'remote': is_remote,
+                'description': description[:3000],
+                'apply_url': apply_url,
+                'source_url': url,
+                'source_company': company,
+                'posted_at': posted_at,
+                'expires_at': None,
+                'is_active': True,
+                'is_featured': False,
+            })
+
+        return jobs
+
+    except Exception as e:
+        logger.error(f"Shine fetch error for {url}: {e}")
+        return []
+
+
+def scrape_shine(target_count, max_workers=8):
+    all_jobs = []
+    seen_ids = set()
+    total_pages_per_combo = max(1, min(5, target_count // (len(SHINE_CONFIGS) * len(SHINE_CITIES) * 20) + 1))
+
+    tasks = []
+    for keyword, category in SHINE_CONFIGS:
+        for city in SHINE_CITIES:
+            for page in range(1, total_pages_per_combo + 1):
+                tasks.append((keyword, city, page))
+
+    random.shuffle(tasks)
+
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        fut_map = {}
+        for keyword, city, page in tasks:
+            fut = executor.submit(fetch_shine_page, keyword, city, page)
+            fut_map[fut] = (keyword, city, page)
+
+        for fut in as_completed(fut_map):
+            keyword, city, page = fut_map[fut]
+            try:
+                jobs = fut.result()
+                new_count = 0
+                for j in jobs:
+                    dedup_key = (j['title'], j['company'], j['location'])
+                    if dedup_key not in seen_ids:
+                        seen_ids.add(dedup_key)
+                        all_jobs.append(j)
+                        new_count += 1
+                if jobs:
+                    logger.info(f"Shine {keyword}/{city} p{page}: {new_count} new / {len(jobs)} total")
+            except Exception as e:
+                logger.error(f"Shine {keyword}/{city} p{page} failed: {e}")
+
+            if len(all_jobs) >= target_count:
+                break
+
+        if len(all_jobs) >= target_count:
+            for f in fut_map:
+                f.cancel()
+
+    return all_jobs[:target_count]
 
 
 def generate_fallback_jobs(count):
-    companies = [
-        ('Stripe', 'US'), ('Vercel', 'US'), ('Linear', 'US'), ('Glean', 'US'),
-        ('Vanta', 'US'), ('Brex', 'US'), ('Mercury', 'US'), ('Airtable', 'US'),
-        ('Deel', 'AE'), ('Lattice', 'US'), ('Loom', 'US'), ('Miro', 'NL'),
-        ('Replit', 'US'), ('Webflow', 'US'), ('Ramp', 'US'), ('Anduril', 'US'),
-        ('Flipkart', 'IN'), ('Zomato', 'IN'), ('Swiggy', 'IN'), ('Razorpay', 'IN'),
-        ('CRED', 'IN'), ('Groww', 'IN'), ('Zerodha', 'IN'), ('PhonePe', 'IN'),
-        ('OYO', 'IN'), ('MakeMyTrip', 'IN'), ('Nykaa', 'IN'), ('Meesho', 'IN'),
-        ('ShareChat', 'IN'), ('Jio Platforms', 'IN'), ('Ather Energy', 'IN'),
-        ('Rapido', 'IN'), ('Zepto', 'IN'), ('Blinkit', 'IN'), ('Porter', 'IN'),
-        ('CoinDCX', 'IN'), ('BharatPe', 'IN'), ('Upstox', 'IN'), ('Spinny', 'IN'),
-        ('Google', 'US'), ('Microsoft', 'US'), ('Amazon', 'US'), ('Meta', 'US'),
-        ('Netflix', 'US'), ('Apple', 'US'), ('Uber', 'US'),
-        ('Airbnb', 'US'), ('Spotify', 'SE'), ('Notion', 'US'), ('Figma', 'US'),
-        ('Canva', 'AU'), ('Atlassian', 'AU'), ('GitLab', 'US'), ('Supabase', 'US'),
-        ('Render', 'US'), ('Railway', 'US'), ('Neon', 'US'), ('PlanetScale', 'US'),
-    ]
-
-    title_templates = {
-        'engineering': [
-            'Software Engineer', 'Backend Engineer', 'Frontend Engineer',
-            'Full Stack Engineer', 'DevOps Engineer', 'SRE',
-            'Data Engineer', 'Platform Engineer', 'Infrastructure Engineer',
-            'Security Engineer', 'Android Developer', 'iOS Developer',
-            'Cloud Engineer', 'Systems Engineer', 'Network Engineer',
-        ],
-        'data_ai': [
-            'Data Scientist', 'Machine Learning Engineer', 'Data Analyst',
-            'AI Engineer', 'Analytics Engineer', 'Research Scientist',
-            'NLP Engineer', 'Computer Vision Engineer', 'MLOps Engineer',
-            'Data Architect', 'Business Intelligence Analyst',
-        ],
-        'design': [
-            'Product Designer', 'UX Designer', 'UI Designer',
-            'Design Engineer', 'Brand Designer', 'Visual Designer',
-            'Interaction Designer', 'Design Lead', 'Creative Director',
-        ],
-        'product': [
-            'Product Manager', 'Senior Product Manager', 'Product Owner',
-            'Technical Product Manager', 'Associate Product Manager',
-            'Product Lead', 'Product Analyst', 'Product Operations',
-        ],
-        'marketing': [
-            'Marketing Manager', 'Content Strategist', 'Growth Marketer',
-            'SEO Specialist', 'Brand Manager', 'Digital Marketing Manager',
-            'Social Media Manager', 'Performance Marketer', 'Product Marketing Manager',
-        ],
-        'sales': [
-            'Account Executive', 'Sales Engineer', 'Customer Success Manager',
-            'Revenue Operations Analyst', 'Business Development Manager',
-            'Sales Manager', 'Account Manager', 'Enterprise Sales',
-        ],
-        'operations': [
-            'Operations Manager', 'Business Analyst', 'Program Manager',
-            'Chief of Staff', 'Project Manager', 'Supply Chain Manager',
-            'Scrum Master', 'Technical Program Manager', 'Strategy Manager',
-        ],
-    }
-
     indian_cities = ['Bangalore', 'Mumbai', 'Delhi', 'Pune', 'Hyderabad', 'Chennai',
                      'Kolkata', 'Gurgaon', 'Noida', 'Ahmedabad', 'Jaipur', 'Remote']
     global_cities = ['San Francisco', 'New York', 'London', 'Berlin', 'Singapore',
                      'Sydney', 'Toronto', 'Dubai', 'Amsterdam', 'Remote']
-
     experiences = ['fresher', 'junior', 'mid', 'senior', 'lead']
     now = timezone.now()
     jobs = []
 
     for i in range(count):
-        company, country = random.choice(companies)
-        cat = random.choice(list(title_templates.keys()))
-        title = random.choice(title_templates[cat])
+        company, country = random.choice(FALLBACK_COMPANIES)
+        cat = random.choice(list(FALLBACK_TITLE_TEMPLATES.keys()))
+        title = random.choice(FALLBACK_TITLE_TEMPLATES[cat])
         exp = random.choice(experiences)
 
         is_indian_company = country == 'IN'
@@ -316,7 +395,6 @@ def generate_fallback_jobs(count):
             'uber': 'uber.com/careers',
             'airbnb': 'airbnb.com/careers',
             'spotify': 'spotify.com/careers',
-            'twitter/x': 'x.com',
         }
         domain = domain_map.get(company_domain, f'careers.{company_domain}.com')
         apply_url = f'https://{domain}/jobs/{random.randint(1000, 9999)}'
@@ -325,16 +403,12 @@ def generate_fallback_jobs(count):
             f"We are looking for a talented {title} to join {company}. "
             f"This is a {'remote' if remote else 'onsite'} position based in {loc}.\n\n"
             f"## Requirements\n"
-            f"- {random.randint(2, 6)}+ years of experience in {cat}\n"
+            f"- {random.randint(2, 6)}+ years of experience\n"
             f"- Strong problem-solving skills\n"
-            f"- Experience with modern tools and technologies\n"
-            f"- Excellent communication skills\n\n"
+            f"- Experience with modern tools and technologies\n\n"
             f"## Benefits\n"
             f"- Competitive salary: ₹{salary_min:,} - ₹{salary_max:,}\n"
-            f"- Health insurance\n"
-            f"- Equity / ESOPs\n"
-            f"- Flexible work hours\n"
-            f"- Learning & development budget"
+            f"- Health insurance\n- Flexible work hours"
         )
 
         jobs.append({
@@ -357,7 +431,6 @@ def generate_fallback_jobs(count):
             'is_active': True,
             'is_featured': i < 10,
         })
-
     return jobs
 
 
@@ -396,10 +469,7 @@ def save_jobs(jobs_data, stdout):
         }
 
         try:
-            job, was_created = Job.objects.get_or_create(
-                defaults=defaults,
-                **lookup,
-            )
+            job, was_created = Job.objects.get_or_create(defaults=defaults, **lookup)
             if was_created:
                 created += 1
             else:
@@ -411,11 +481,11 @@ def save_jobs(jobs_data, stdout):
 
 
 class Command(BaseCommand):
-    help = 'Scraper: Adzuna API (real India jobs) + fallback seed data'
+    help = 'Scraper: Shine.com (real India jobs) + fallback seed data'
 
     def add_arguments(self, parser):
-        parser.add_argument('--count', type=int, default=200, help='Target number of jobs')
-        parser.add_argument('--no-scrape', action='store_true', help='Skip API scraping, only use fallback')
+        parser.add_argument('--count', type=int, default=300, help='Target number of jobs')
+        parser.add_argument('--no-scrape', action='store_true', help='Skip Shine scraping')
 
     def handle(self, *args, **options):
         count = options['count']
@@ -424,20 +494,20 @@ class Command(BaseCommand):
         now = timezone.now()
 
         self.stdout.write(f"[{now}] Advanced scraper starting...")
-        self.stdout.write(f"Adzuna API: {'Skipped' if no_scrape else 'Configured' if settings.ADZUNA_APP_ID and settings.ADZUNA_APP_KEY else 'Keys not set (using fallback)'}")
+        self.stdout.write(f"Shine.com: {'Skipped' if no_scrape else 'Enabled'}")
         self.stdout.write(f"Target: {count} jobs")
 
         all_jobs = []
 
-        if not no_scrape and settings.ADZUNA_APP_ID and settings.ADZUNA_APP_KEY:
-            self.stdout.write("Fetching jobs from Adzuna API...")
-            all_jobs = fetch_adzuna_jobs(max_total=count)
-            self.stdout.write(f"Adzuna returned {len(all_jobs)} jobs")
+        if not no_scrape:
+            self.stdout.write("Fetching jobs from Shine.com...")
+            all_jobs = scrape_shine(target_count=count)
+            self.stdout.write(f"Shine returned {len(all_jobs)} unique jobs")
         else:
-            self.stdout.write("API scraping skipped.")
+            self.stdout.write("Shine scraping skipped.")
 
         api_created, api_skipped = save_jobs(all_jobs, self.stdout)
-        self.stdout.write(f"API: {api_created} new, {api_skipped} duplicates skipped")
+        self.stdout.write(f"Shine: {api_created} new, {api_skipped} duplicates skipped")
 
         fallback_needed = max(0, count - api_created)
         if fallback_needed > 0:
@@ -446,10 +516,15 @@ class Command(BaseCommand):
             fb_created, fb_skipped = save_jobs(fallback_jobs, self.stdout)
             self.stdout.write(f"Fallback: {fb_created} new, {fb_skipped} duplicates skipped")
         else:
-            self.stdout.write("Fallback not needed (enough API jobs)")
+            self.stdout.write("Fallback not needed")
+
+        if not no_scrape and api_created == 0:
+            self.stdout.write(self.style.WARNING(
+                "Shine returned 0 new jobs. Check network connectivity."
+            ))
 
         elapsed = time.time() - start_time
         total_active = Job.objects.filter(is_active=True).count()
         self.stdout.write(self.style.SUCCESS(
-            f"✓ Scraper complete in {elapsed:.1f}s. {total_active} total active jobs in database."
+            f"✓ Scraper complete in {elapsed:.1f}s. {total_active} total active jobs."
         ))
