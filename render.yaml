@@ -2,9 +2,9 @@ services:
   - type: web
     name: jobs24x7
     runtime: python
-    repo: https://github.com/YOUR_GITHUB_USERNAME/jobs24
+    repo: https://github.com/aryaman-aga/jobs24x
     plan: free
-    region: singapore
+    region: ohio
     branch: main
     healthCheckPath: /health/
     buildCommand: pip install -r requirements.txt && python manage.py migrate --noinput && python manage.py collectstatic --noinput
@@ -56,5 +56,5 @@ services:
 databases:
   - name: jobs24x7-db
     plan: free
-    region: singapore
+    region: ohio
     type: postgres
