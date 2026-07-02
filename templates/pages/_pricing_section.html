@@ -7,22 +7,23 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
             {% for plan in plans %}
-            <div class="bg-gray-800 rounded-2xl p-6 border border-gray-700 relative transition-all duration-300 hover:border-blue-500/50 hover:-translate-y-1 {% if forloop.counter == 2 %}ring-2 ring-blue-500{% elif forloop.counter == 4 %}ring-2 ring-indigo-500{% endif %}">
-                {% if forloop.counter == 2 %}<span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs px-4 py-1 rounded-full font-medium">MOST POPULAR</span>{% endif %}
-                {% if forloop.counter == 4 %}<span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-xs px-4 py-1 rounded-full font-medium">BEST VALUE</span>{% endif %}
+            <div class="bg-gray-800 rounded-2xl p-6 border border-gray-700 relative transition-all duration-300 hover:border-blue-500/50 hover:-translate-y-1 {% if plan.name == 'monthly' %}ring-2 ring-blue-500{% elif plan.name == 'yearly' %}ring-2 ring-indigo-500{% endif %}">
+                {% if plan.name == 'monthly' %}<span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs px-4 py-1 rounded-full font-medium">MOST POPULAR</span>{% endif %}
+                {% if plan.name == 'yearly' %}<span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-xs px-4 py-1 rounded-full font-medium">BEST VALUE</span>{% endif %}
+                {% if plan.name == 'weekly' %}<p class="text-xs text-gray-500 uppercase tracking-wide mb-1">Starter</p>{% endif %}
                 <h3 class="font-bold text-lg text-white">{{ plan.display_name }}</h3>
                 <div class="mt-3">
                     {% if plan.name == 'weekly' %}
                         <p class="text-3xl font-bold text-white">₹{{ plan.price|floatformat:"0" }}</p>
                         <p class="text-sm text-gray-400">7-day access, risk-free</p>
                     {% elif plan.name == 'six_month' %}
-                        <p class="text-3xl font-bold text-white">₹{{ plan.price|floatformat:"0" }}/mo</p>
-                        <p class="text-sm text-gray-400">₹2,394 billed every 6 months</p>
-                        <p class="text-xs text-green-400 mt-1">Save ₹600 vs monthly</p>
+                        <p class="text-3xl font-bold text-white">₹{{ plan.monthly_price|floatformat:"0" }}/mo</p>
+                        <p class="text-sm text-gray-400">₹{{ plan.total_price|floatformat:"0" }} billed every 6 months</p>
+                        <p class="text-xs text-green-400 mt-1">Save ₹{{ plan.savings|floatformat:"0" }} vs monthly</p>
                     {% elif plan.name == 'yearly' %}
-                        <p class="text-3xl font-bold text-white">₹{{ plan.price|floatformat:"0" }}/mo</p>
-                        <p class="text-sm text-gray-400">₹2,388 billed annually</p>
-                        <p class="text-xs text-green-400 mt-1">Save ₹3,600 vs monthly</p>
+                        <p class="text-3xl font-bold text-white">₹{{ plan.monthly_price|floatformat:"0" }}/mo</p>
+                        <p class="text-sm text-gray-400">₹{{ plan.total_price|floatformat:"0" }} billed annually</p>
+                        <p class="text-xs text-green-400 mt-1">Save ₹{{ plan.savings|floatformat:"0" }} vs monthly</p>
                     {% else %}
                         <p class="text-3xl font-bold text-white">₹{{ plan.price|floatformat:"0" }}/mo</p>
                         <p class="text-sm text-gray-400">₹{{ plan.price|floatformat:"0" }} billed monthly</p>
@@ -36,8 +37,8 @@
                     </li>
                     {% endfor %}
                 </ul>
-                <a href="{% url 'signup' %}?plan={{ plan.id }}" class="mt-6 block w-full text-center py-3 rounded-lg font-semibold transition {% if forloop.counter == 2 or forloop.counter == 4 %}bg-blue-600 text-white hover:bg-blue-700{% else %}bg-gray-700 text-gray-300 hover:bg-gray-600{% endif %}">
-                    {% if plan.name == 'weekly' %}Get Weekly Access{% else %}Choose Plan{% endif %}
+                <a href="{% url 'signup' %}?plan={{ plan.id }}" class="mt-6 block w-full text-center py-3 rounded-lg font-semibold transition {% if plan.name == 'monthly' or plan.name == 'yearly' %}bg-blue-600 text-white hover:bg-blue-700{% else %}bg-gray-700 text-gray-300 hover:bg-gray-600{% endif %}">
+                    {% if plan.name == 'weekly' %}Try 7 Days{% else %}Choose Plan{% endif %}
                 </a>
             </div>
             {% empty %}

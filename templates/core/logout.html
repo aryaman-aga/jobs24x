@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Signed Out - Jobs24X7{% endblock %}
+{% block top_banner %}{% endblock %}
+{% block content %}
+<section class="min-h-[80vh] flex items-center justify-center py-16 px-4">
+    <div class="text-center max-w-lg animate-fade-in">
+        <div class="text-6xl mb-6">👋</div>
+        <h1 class="text-3xl font-bold text-white mb-3">You've been signed out</h1>
+        <p class="text-gray-400 mb-2">Your session is closed. See you again soon!</p>
+        <p class="text-sm text-gray-500 mb-8">Don't miss new opportunities — they're added daily.</p>
+        <div class="flex justify-center gap-4">
+            <a href="{% url 'login' %}" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">Sign Back In</a>
+            <a href="/" class="bg-gray-800 text-gray-300 px-6 py-3 rounded-lg font-semibold border border-gray-700 hover:border-gray-500 hover:text-white transition">Go Home</a>
+        </div>
+        <div class="mt-10 pt-8 border-t border-gray-800">
+            <div class="flex flex-wrap justify-center gap-4 text-sm" id="hover-texts">
+                <a href="{% url 'job_list' %}" class="text-gray-500 hover:text-white transition" data-text="Browse Jobs">Browse Jobs</a>
+                <a href="{% url 'pricing' %}" class="text-gray-500 hover:text-white transition" data-text="View Plans">View Plans</a>
+                <a href="{% url 'signup' %}" class="text-gray-500 hover:text-white transition" data-text="Create Account">Create Account</a>
+            </div>
+        </div>
+        <div class="mt-6 text-xs text-gray-600">
+            <p id="hover-display" class="transition-all duration-300"></p>
+        </div>
+    </div>
+</section>
+<script>
+(function(){
+    const display = document.getElementById('hover-display');
+    const links = document.querySelectorAll('#hover-texts a');
+    links.forEach(link => {
+        link.addEventListener('mouseenter', function(e){
+            display.textContent = '→ ' + this.getAttribute('data-text');
+            display.classList.add('text-blue-400');
+        });
+        link.addEventListener('mouseleave', function(){
+            display.textContent = '';
+            display.classList.remove('text-blue-400');
+        });
+    });
+})();
+</script>
+{% endblock %}

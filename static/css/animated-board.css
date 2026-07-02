@@ -1,0 +1,176 @@
+/* ── Board ── */
+.fb-board {
+  position: relative;
+  width: 100%;
+  max-width: min(640px, 92vw);
+  margin: 0 auto;
+  background: #e5e5e5;
+  border-radius: 16px;
+  padding: 8px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+.dark .fb-board {
+  background: #1a1a1a;
+  box-shadow: 0 20px 70px -15px rgba(0,0,0,0.6);
+}
+
+.fb-grid {
+  display: grid;
+  gap: 1px;
+}
+@media (min-width: 768px) {
+  .fb-grid { gap: 3px; }
+}
+
+/* ── Cell ── */
+.fb-cell {
+  position: relative;
+  aspect-ratio: 3 / 6;
+  border: 1px solid #bfbfbf;
+  border-radius: 2px;
+  font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', Menlo, monospace;
+  font-weight: 700;
+  font-size: clamp(10px, 2.2vw, 22px);
+  background: #d9d9d9;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+@media (min-width: 768px) {
+  .fb-cell {
+    border-width: 2px;
+    border-radius: 3px;
+  }
+}
+.dark .fb-cell {
+  border-color: #000;
+  background: #262626;
+}
+
+/* Color tile cell */
+.fb-cell.fb-color-cell {
+  border: 1px solid #bfbfbf;
+}
+.dark .fb-cell.fb-color-cell {
+  border-color: #000;
+}
+
+/* ── Cell halves (static, always visible) ── */
+.fb-static-top,
+.fb-static-bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: inherit;
+}
+.fb-static-top {
+  top: 0;
+  bottom: calc(50% + 0.5px);
+  border-radius: 3px 3px 0 0;
+}
+.fb-static-bottom {
+  top: calc(50% + 0.5px);
+  bottom: 0;
+  border-radius: 0 0 3px 3px;
+}
+
+/* ── Flap animation elements (hidden by default) ── */
+.fb-flap-top,
+.fb-flap-bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  display: none;
+  z-index: 10;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+}
+.fb-flap-top {
+  top: 0;
+  bottom: calc(50% + 0.5px);
+  border-radius: 3px 3px 0 0;
+  transform-origin: bottom center;
+  -webkit-transform-origin: bottom center;
+}
+.fb-flap-bottom {
+  top: calc(50% + 0.5px);
+  bottom: 0;
+  border-radius: 0 0 3px 3px;
+  transform-origin: top center;
+  -webkit-transform-origin: top center;
+}
+
+.fb-flap-char {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+/* ── Shine overlay ── */
+.fb-shine {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+.fb-flap-top .fb-shine {
+  background: linear-gradient(to bottom, rgba(255,255,255,0.8), transparent 60%);
+}
+.fb-flap-bottom .fb-shine {
+  background: linear-gradient(to top, rgba(255,255,255,0.6), transparent 60%);
+}
+.dark .fb-flap-top .fb-shine {
+  background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent 60%);
+}
+.dark .fb-flap-bottom .fb-shine {
+  background: linear-gradient(to top, rgba(0,0,0,0.6), transparent 60%);
+}
+
+/* ── Center divider ── */
+.fb-divider {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  z-index: 20;
+  background: rgba(148,148,148,0.5);
+  transform: translateY(-0.5px);
+  pointer-events: none;
+}
+.dark .fb-divider {
+  background: rgba(0,0,0,0.6);
+}
+
+/* ── Decorative bottom stripes ── */
+.fb-stripes {
+  height: 8px;
+  width: 100%;
+  background: repeating-linear-gradient(
+    to bottom,
+    currentColor 0,
+    currentColor 1px,
+    transparent 1px,
+    transparent 0.15rem
+  );
+  -webkit-mask-image: linear-gradient(to top, transparent 50%, black 50%);
+  mask-image: linear-gradient(to top, transparent 50%, black 50%);
+  color: #a3a3a3;
+  opacity: 0.2;
+}
+.dark .fb-stripes {
+  color: #000;
+  opacity: 1;
+}

@@ -1,0 +1,12 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/gooey-input.css' %}">
+<div id="gooey-search-root"></div>
+<script src="{% static 'js/gooey-input.js' %}"></script>
+<script>
+  new GooeySearch(document.getElementById('gooey-search-root'), {
+    placeholder: 'Search jobs, companies, keywords...',
+    collapsedWidth: 52,
+    expandedWidth: 300,
+    actionUrl: '{% url "job_list" %}?q=',
+  });
+</script>

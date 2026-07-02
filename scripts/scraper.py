@@ -1,4 +1,4 @@
-# Jobs24x Job Scraper Framework
+# Jobs24X7 Job Scraper Framework
 # Uses Scrapy to scrape company career pages for job listings
 # Add new companies to SPIDER_REGISTRY below
 

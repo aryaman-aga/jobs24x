@@ -2,14 +2,14 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h2 class="text-3xl font-bold text-center mb-2">Real Salary Bands</h2>
         <p class="text-center text-gray-400 mb-4">Packages from Fresher to Principal</p>
-        <p class="text-center text-sm text-gray-500 mb-8">Real compensation ranges from roles posted on Jobs24x across 2,400+ companies.</p>
+        <p class="text-center text-sm text-gray-500 mb-8">Real compensation ranges from roles posted on Jobs24X7 across 2,400+ companies. From your first job to Staff+ levels.</p>
         <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {% for band in salary_bands %}
             <div class="bg-gray-800/50 rounded-xl p-5 border border-gray-700/50 text-center hover:border-blue-500/30 hover:shadow-lg hover:shadow-blue-500/5 transition-all duration-300">
                 <p class="text-xs text-gray-500 mb-1">{{ band.years }}</p>
                 <h3 class="font-bold text-lg text-white">{{ band.title }}</h3>
                 <p class="text-blue-400 font-bold mt-2">{{ band.salary }}</p>
-                <p class="text-xs text-gray-500">{{ band.converted }}</p>
+                <p class="text-xs text-gray-500">{{ band.note }}</p>
                 <p class="text-xs text-gray-500 mt-2">{{ band.roles }}</p>
             </div>
             {% empty %}

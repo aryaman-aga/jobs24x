@@ -7,7 +7,7 @@ class BlogPost(models.Model):
     title = models.CharField(max_length=255)
     slug = models.SlugField(unique=True, blank=True)
     author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    author_name = models.CharField(max_length=100, default='Jobs24x Team')
+    author_name = models.CharField(max_length=100, default='Jobs24X7 Team')
     content = models.TextField()
     excerpt = models.TextField(blank=True, default='')
     cover_image = models.URLField(blank=True, default='')

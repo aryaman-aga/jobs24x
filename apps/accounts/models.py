@@ -14,6 +14,9 @@ class Profile(models.Model):
     is_subscribed = models.BooleanField(default=False)
     subscription_end = models.DateTimeField(null=True, blank=True)
     razorpay_customer_id = models.CharField(max_length=100, blank=True, default='')
+    preferred_categories = models.JSONField(default=list, blank=True)
+    preferred_experience = models.CharField(max_length=20, blank=True, default='')
+    preferred_location = models.CharField(max_length=255, blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

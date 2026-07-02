@@ -38,7 +38,7 @@ def send_alert_digest(alert):
 
     body = f"""Hi {alert.user.email},
 
-Here are your daily job matches from Jobs24x:
+Here are your daily job matches from Jobs24X7:
 
 {"".join(job_lines)}
 
@@ -46,11 +46,11 @@ Browse all jobs: http://localhost:8000/jobs/
 
 To unsubscribe: http://localhost:8000/alerts/unsubscribe/{alert.pk}/
 
-— Jobs24x Team
+— Jobs24X7 Team
 """
 
     send_mail(
-        subject='Your Daily Job Alert from Jobs24x',
+        subject='Your Daily Job Alert from Jobs24X7',
         message=body,
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[alert.user.email],

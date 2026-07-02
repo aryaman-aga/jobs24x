@@ -1,4 +1,4 @@
-# Jobs24x — Deployment Guide
+# Jobs24X7 — Deployment Guide
 # ===========================
 
 ## Option A: Quick Deploy (Render — Free tier)
@@ -88,7 +88,7 @@ python manage.py createsuperuser
 Create `/etc/systemd/system/jobs24x.service`:
 ```
 [Unit]
-Description=Jobs24x Gunicorn service
+Description=Jobs24X7 Gunicorn service
 After=network.target
 
 [Service]

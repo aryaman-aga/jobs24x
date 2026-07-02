@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 
 MODE_CHOICES = [
@@ -43,3 +44,16 @@ class Hackathon(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class HackathonApplication(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='hackathon_apps')
+    hackathon = models.ForeignKey(Hackathon, on_delete=models.CASCADE, related_name='applications')
+    applied_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'hackathon')
+        ordering = ['-applied_at']
+
+    def __str__(self):
+        return f'{self.user.email} → {self.hackathon.title}'

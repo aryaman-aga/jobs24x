@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}{{ job.title }} at {{ job.company }} - Jobs24x{% endblock %}
+{% block title %}{{ job.title }} at {{ job.company }} - Jobs24X7{% endblock %}
 {% block content %}
 <section class="py-10">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -7,7 +7,12 @@
         <div class="bg-gray-800/80 rounded-2xl p-8 border border-gray-700/50">
             <div class="flex items-start justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-white">{{ job.title }}</h1>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-2xl font-bold text-white">{{ job.title }}</h1>
+                        {% if is_free_preview %}
+                        <span class="bg-green-900/60 text-green-300 text-[10px] px-2 py-0.5 rounded-full border border-green-700/50 font-medium">Free Preview</span>
+                        {% endif %}
+                    </div>
                     <p class="text-gray-400 mt-1">{{ job.company }} {% if job.location %}· {{ job.location }}{% endif %}</p>
                 </div>
                 {% if user.is_authenticated %}
@@ -32,7 +37,7 @@
             </div>
             {% endif %}
 
-            {% if can_view_details %}
+            {% if can_view_details or is_free_preview %}
                 <div class="mt-6">
                     <h2 class="font-semibold text-lg text-white mb-3">About this role</h2>
                     <div class="text-gray-300 leading-relaxed whitespace-pre-line">{{ job.description }}</div>
@@ -40,8 +45,10 @@
                 <a href="{{ job.apply_url }}" target="_blank" rel="noopener noreferrer" class="mt-6 inline-block bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">Apply Now →</a>
             {% else %}
                 <div class="mt-8 bg-gradient-to-r from-blue-900/30 to-indigo-900/30 rounded-xl p-8 text-center border border-blue-800/30">
+                    <div class="text-5xl mb-4">🔒</div>
                     <h3 class="text-lg font-bold text-white">Subscribe to view full details</h3>
                     <p class="text-gray-400 mt-2">Get access to the complete job description, apply link, and salary information.</p>
+                    <p class="text-xs text-gray-500 mt-2 mb-4">First 3 jobs are always free. Unlock all with a plan starting at ₹149.</p>
                     <a href="{% url 'pricing' %}" class="mt-4 inline-block bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">View Plans →</a>
                 </div>
             {% endif %}

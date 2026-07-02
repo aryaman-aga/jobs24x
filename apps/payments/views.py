@@ -13,6 +13,16 @@ import json
 
 def pricing(request):
     plans = SubscriptionPlan.objects.filter(is_active=True).order_by('sort_order')
+    for plan in plans:
+        if plan.name == 'six_month':
+            plan.billing_total = plan.price * 6
+            plan.savings = 299 * 6 - plan.price * 6
+        elif plan.name == 'yearly':
+            plan.billing_total = plan.price * 12
+            plan.savings = 299 * 12 - plan.price * 12
+        else:
+            plan.billing_total = plan.price
+            plan.savings = 0
     context = {'plans': plans}
     return render(request, 'payments/pricing.html', context)
 
@@ -46,7 +56,7 @@ def create_order(request):
         'amount': int(plan.price * 100),
         'currency': 'INR',
         'key': settings.RAZORPAY_KEY_ID,
-        'name': 'Jobs24x',
+        'name': 'Jobs24X7',
         'description': f'{plan.display_name} Plan',
         'prefill': {
             'email': request.user.email,

@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Jobs24x - Exclusive Job Opportunities{% endblock %}</title>
+    <title>{% block title %}Jobs24X7 - Exclusive Job Opportunities{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config={darkMode:'class'}</script>
     <link rel="icon" href="https://jobs24x.com/favicon.png">
     <style>
         [x-cloak]{display:none!important}
@@ -24,8 +23,8 @@
         .stagger-5{animation-delay:.5s;opacity:0}
         .stagger-6{animation-delay:.6s;opacity:0}
         .modal-overlay{position:fixed;inset:0;z-index:100;display:none}
-        .modal-overlay.active{display:flex;animation:fadeIn .2s ease-out}
-        .modal-content{animation:slideUp .3s ease-out}
+        .modal-overlay.active{display:flex;align-items:center;justify-content:center;animation:fadeIn .2s ease-out}
+        .modal-content{animation:slideUp .3s ease-out;width:100%;max-width:42rem;margin:0 1rem}
         .gradient-text{background:linear-gradient(135deg,#60a5fa,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
         body.dark .dark-card{border-color:#374151}
         .dark .bg-card{background:rgb(31 41 55)}
@@ -45,35 +44,55 @@
     </div>
     {% endblock %}
 
-    <nav class="bg-gray-900/80 border-b border-gray-800 sticky top-0 z-50 backdrop-blur-md">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
-                <a href="/" class="flex items-center space-x-2 group">
-                    <span class="text-2xl font-bold gradient-text group-hover:opacity-80 transition">Jobs24x</span>
-                </a>
-                <div class="hidden md:flex items-center space-x-6">
-                    <a href="/" class="text-gray-300 hover:text-white font-medium transition">Home</a>
-                    <a href="{% url 'job_list' %}" class="text-gray-300 hover:text-white font-medium transition">Jobs</a>
-                    <a href="{% url 'hackathon_list' %}" class="text-gray-300 hover:text-white font-medium transition">Hackathons<span class="text-xs text-green-400 ml-1">Free</span></a>
-                    <a href="{% url 'pricing' %}" class="text-gray-300 hover:text-white font-medium transition">Pricing</a>
-                    <a href="{% url 'affiliate_home' %}" class="text-gray-300 hover:text-white font-medium transition">Partner<span class="text-xs text-yellow-400 ml-1">Earn 20%</span></a>
-                </div>
-                <div class="flex items-center space-x-3">
-                    <button onclick="toggleDark()" class="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition" title="Toggle theme">
-                        <svg id="dark-icon" class="w-5 h-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
-                        <svg id="light-icon" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                    </button>
-                    {% if user.is_authenticated %}
-                        <a href="{% url 'dashboard' %}" class="text-gray-300 hover:text-white font-medium transition">Dashboard</a>
-                        <a href="{% url 'logout' %}" class="bg-gray-800 text-gray-300 px-4 py-2 rounded-lg font-medium hover:bg-gray-700 hover:text-white transition">Sign Out</a>
-                    {% else %}
-                        <a href="{% url 'login' %}" class="text-gray-300 hover:text-white font-medium transition">Sign In</a>
-                        <a href="{% url 'signup' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition">Get Started</a>
-                    {% endif %}
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/resizable-navbar.css' %}">
+    <div class="rn-wrapper">
+        <nav class="rn-nav">
+            <a href="/" class="rn-logo"><span>Jobs24X7</span></a>
+
+            <div class="rn-items">
+                <a href="/" class="rn-item"><span class="rn-item-bg"></span><span>Home</span></a>
+                <a href="{% url 'job_list' %}" class="rn-item"><span class="rn-item-bg"></span><span>Jobs</span></a>
+                <a href="{% url 'hackathon_list' %}" class="rn-item"><span class="rn-item-bg"></span><span>Hackathons <span class="text-green-400 text-xs ml-1 font-bold">Free</span></span></a>
+            </div>
+
+            <div class="rn-actions">
+                <button onclick="toggleDark()" class="rn-theme-btn" title="Toggle theme">
+                    <svg id="dark-icon2" class="w-5 h-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+                    <svg id="light-icon2" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                </button>
+                {% if user.is_authenticated %}
+                <a href="{% url 'dashboard' %}" class="rn-btn rn-btn-secondary">Profile</a>
+                <a href="{% url 'logout' %}" class="rn-btn rn-btn-primary">Sign Out</a>
+                {% else %}
+                <a href="{% url 'login' %}" class="rn-btn rn-btn-secondary">Sign In</a>
+                <a href="{% url 'signup' %}" class="rn-btn rn-btn-primary">Get Started</a>
+                {% endif %}
+            </div>
+
+            <div class="rn-mobile-header">
+                <button class="rn-mobile-toggle" aria-expanded="false" aria-label="Toggle menu">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </button>
+                <div class="rn-mobile-menu">
+                    <a href="/">Home</a>
+                    <a href="{% url 'job_list' %}">Jobs</a>
+                    <a href="{% url 'hackathon_list' %}">Hackathons</a>
+                    <a href="{% url 'pricing' %}">Pricing</a>
+                    <div class="rn-actions">
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'dashboard' %}" class="rn-btn rn-btn-secondary">Profile</a>
+                        <a href="{% url 'logout' %}" class="rn-btn rn-btn-primary">Sign Out</a>
+                        {% else %}
+                        <a href="{% url 'login' %}" class="rn-btn rn-btn-secondary">Sign In</a>
+                        <a href="{% url 'signup' %}" class="rn-btn rn-btn-primary">Get Started</a>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
-        </div>
-    </nav>
+        </nav>
+    </div>
+    <script src="{% static 'js/resizable-navbar.js' %}"></script>
 
     <main>
         {% block content %}{% endblock %}
@@ -83,7 +102,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
                 <div>
-                    <span class="text-2xl font-bold gradient-text">Jobs24x</span>
+                    <span class="text-2xl font-bold gradient-text">Jobs24X7</span>
                     <p class="mt-2 text-sm text-gray-400">Curated opportunities from top company career pages worldwide.</p>
                 </div>
                 <div>
@@ -114,7 +133,7 @@
                 </div>
             </div>
             <div class="border-t border-gray-800 pt-8 text-center text-sm text-gray-500">
-                © 2026 Jobs24x. All rights reserved.
+                © 2026 Jobs24X7. All rights reserved.
             </div>
         </div>
     </footer>

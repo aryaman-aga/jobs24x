@@ -1,0 +1,26 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/animated-board.css' %}">
+<div id="flap-board-container" class="w-full py-8 md:py-12 px-4"></div>
+<script src="{% static 'js/text-flipping-board.js' %}"></script>
+<script>
+(function(){
+  var messages = [
+    'FULL STACK ENGINEER',
+    'ML ENGINEER \n AI RESEARCHER',
+    'DEVOPS ENGINEER \n PLATFORM ENG',
+    'DATA SCIENTIST \n ANALYTICS ENG',
+    'FRONTEND ENGINEER \n UI/UX ARCHITECT',
+    'BACKEND ARCHITECT \n DISTRIBUTED SYS',
+    'SECURITY ENGINEER \n APP SECURITY',
+    'CLOUD ARCHITECT \n INFRA ENGINEER',
+    'PRODUCT MANAGER \n TECH STRATEGY',
+    'TECH LEAD \n PRINCIPAL ENG',
+  ];
+  var board = new FlapBoard(document.getElementById('flap-board-container'), {
+    messages: messages,
+    interval: 6000,
+    duration: 1.2,
+  });
+  board.start();
+})();
+</script>
