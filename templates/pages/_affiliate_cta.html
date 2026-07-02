@@ -1,0 +1,19 @@
+<section class="py-16 bg-gradient-to-r from-blue-900/50 to-indigo-900/50 scroll-reveal border-y border-blue-800/30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center max-w-3xl mx-auto">
+            <h2 class="text-3xl font-bold text-white">Help your friends land better jobs. Earn 20% for every referral.</h2>
+            <p class="mt-4 text-blue-300">Share your unique link with your network. When someone subscribes through it, you earn a 20% commission on their first payment. No caps, no approvals, no catch.</p>
+            <div class="mt-8 flex flex-col sm:flex-row justify-center gap-4">
+                <a href="{% url 'affiliate_home' %}" class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-blue-50 transition">Become a Partner →</a>
+                {% if user.is_authenticated %}
+                <a href="{% url 'affiliate_dashboard' %}" class="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">View Earnings Dashboard</a>
+                {% endif %}
+            </div>
+            <div class="mt-8 grid grid-cols-3 gap-6 max-w-lg mx-auto text-sm">
+                <div><div class="font-bold text-2xl text-white">1</div><p class="text-blue-300">Share your link</p></div>
+                <div><div class="font-bold text-2xl text-white">2</div><p class="text-blue-300">They subscribe</p></div>
+                <div><div class="font-bold text-2xl text-white">3</div><p class="text-blue-300">You get paid</p></div>
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}Job Alerts - Jobs24x{% endblock %}
+{% block content %}
+<section class="py-10">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 class="text-3xl font-bold text-white">Job Alerts</h1>
+        <p class="text-gray-400 mt-2">Be the first to see new hidden-gem remote roles.</p>
+        {% if user.is_authenticated %}
+        <div class="mt-8 flex justify-between items-center">
+            <a href="{% url 'create_alert' %}" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition">+ Create Alert</a>
+        </div>
+        {% if alerts %}
+        <div class="mt-6 space-y-4">
+            {% for alert in alerts %}
+            <div class="bg-gray-800/50 rounded-xl p-5 border border-gray-700/50 hover:border-gray-600 transition">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="font-semibold text-white">{{ alert.role_keywords|default:"All roles" }}</p>
+                        <p class="text-sm text-gray-400 mt-1">{% if alert.remote_only %}🌍 Remote-only · {% endif %}Categories: {{ alert.categories|join:", "|default:"Any" }}</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs {% if alert.is_active %}text-green-400{% else %}text-gray-500{% endif %}">{{ alert.is_active|yesno:"Active,Paused" }}</span>
+                        <a href="{% url 'delete_alert' alert.pk %}" class="text-red-400 text-sm hover:underline">Delete</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="mt-8 text-center py-12 bg-gray-800/30 rounded-xl border border-gray-700/50">
+            <p class="text-gray-400">No alerts yet. Create one to start receiving matching jobs.</p>
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="mt-8 bg-gradient-to-r from-blue-900/30 to-indigo-900/30 rounded-xl p-8 text-center border border-blue-800/30">
+            <h3 class="text-lg font-bold text-white">Create an account to enable alerts</h3>
+            <p class="text-gray-400 mt-2">Run a search with your preferred filters, then toggle the bell icon to start receiving matches.</p>
+            <div class="mt-4 flex justify-center gap-4">
+                <a href="{% url 'job_list' %}" class="bg-gray-800 text-blue-400 px-6 py-2 rounded-lg font-medium border border-gray-700 hover:bg-gray-700">Browse jobs</a>
+                <a href="{% url 'signup' %}" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700">Sign up free</a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

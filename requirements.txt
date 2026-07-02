@@ -1,0 +1,15 @@
+Django>=6.0,<6.1
+django-allauth>=65.0
+django-anymail>=15.0
+django-crispy-forms>=2.0
+crispy-tailwind>=1.0
+Pillow>=11.0
+celery>=5.4
+redis>=5.0
+scrapy>=2.12
+beautifulsoup4>=4.12
+requests>=2.32
+lxml>=5.3
+huey>=2.5
+psycopg2-binary>=2.9
+pyjwt>=2.9

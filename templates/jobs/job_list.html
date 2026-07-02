@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block title %}Hand-Picked Opportunities - Jobs24x{% endblock %}
+{% block content %}
+<section class="py-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-8 animate-fade-in">
+            <h1 class="text-3xl font-bold text-white">Hand-Picked Opportunities</h1>
+            <p class="text-gray-400 mt-2">Exclusive roles you won't find on mainstream job boards</p>
+        </div>
+
+        <form method="get" class="mb-8 animate-fade-in">
+            <div class="flex flex-wrap justify-center gap-2 mb-4">
+                <button type="submit" name="category" value="" class="px-4 py-2 rounded-full text-sm font-medium transition {% if not current_category %}bg-blue-600 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700{% endif %}">All roles</button>
+                {% for key, label in categories %}
+                <button type="submit" name="category" value="{{ key }}" class="px-4 py-2 rounded-full text-sm font-medium transition {% if current_category == key %}bg-blue-600 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700{% endif %}">{{ label }}</button>
+                {% endfor %}
+            </div>
+            <div class="flex flex-wrap justify-center gap-2 mb-4">
+                <button type="submit" name="experience" value="" class="px-4 py-2 rounded-full text-sm font-medium transition {% if not current_experience %}bg-blue-600 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700{% endif %}">Any experience</button>
+                {% for key, label in experiences %}
+                <button type="submit" name="experience" value="{{ key }}" class="px-4 py-2 rounded-full text-sm font-medium transition {% if current_experience == key %}bg-blue-600 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700{% endif %}">{{ label }}</button>
+                {% endfor %}
+            </div>
+            <div class="flex justify-center gap-4 max-w-lg mx-auto">
+                <input type="text" name="q" value="{{ current_search }}" placeholder="Search jobs..." class="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none">
+                <label class="flex items-center gap-2 text-sm text-gray-400">
+                    <input type="checkbox" name="remote" value="true" {% if current_remote == 'true' %}checked{% endif %} class="rounded bg-gray-800 border-gray-600 text-blue-600">
+                    Remote only
+                </label>
+            </div>
+        </form>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for job in jobs %}
+            <div class="bg-gray-800/50 rounded-xl p-5 border border-gray-700/50 hover:border-blue-500/40 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5 transition-all duration-300 cursor-pointer group" onclick="openJobModal('{{ job.title|escapejs }} @ {{ job.company|escapejs }}', this.dataset.url)" data-url="{% url 'job_detail' job.pk %}">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <h3 class="font-semibold text-white group-hover:text-blue-400 transition">{{ job.title }}</h3>
+                        <p class="text-sm text-gray-400 mt-1">{{ job.company }}</p>
+                    </div>
+                    {% if user.is_authenticated %}
+                    <form method="post" action="{% url 'unsave_job' job.pk %}" class="save-form">
+                        {% csrf_token %}
+                        <button type="submit" class="text-gray-500 hover:text-red-400 transition text-lg">🤍</button>
+                    </form>
+                    {% endif %}
+                </div>
+                <div class="mt-3 flex flex-wrap gap-2">
+                    {% if job.remote %}<span class="bg-green-900/50 text-green-300 text-xs px-2 py-1 rounded-full border border-green-800/50">🌍 Remote</span>{% endif %}
+                    {% if job.location %}<span class="bg-gray-700/50 text-gray-300 text-xs px-2 py-1 rounded-full">{{ job.location }}</span>{% endif %}
+                    {% if job.experience_level %}<span class="bg-blue-900/50 text-blue-300 text-xs px-2 py-1 rounded-full border border-blue-800/50">{{ job.get_experience_level_display }}</span>{% endif %}
+                </div>
+                <div class="mt-3 text-sm text-gray-400">
+                    {% if job.salary_min and job.salary_max %}
+                        <span class="text-green-400 font-medium">₹{{ job.salary_min|floatformat:"0" }} - ₹{{ job.salary_max|floatformat:"0" }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-full text-center py-16 text-gray-500">
+                <p class="text-lg">No jobs found matching your filters.</p>
+                <a href="{% url 'job_list' %}" class="text-blue-400 hover:underline mt-2 inline-block">Clear filters</a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+function openJobModal(title, url) {
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalBody').innerHTML = '<div class="text-center py-8 text-gray-400"><div class="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div><p>Loading...</p></div>';
+    document.getElementById('jobModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+    fetch(url + '?modal=1')
+        .then(r => r.text())
+        .then(html => {
+            document.getElementById('modalBody').innerHTML = html;
+        })
+        .catch(() => {
+            document.getElementById('modalBody').innerHTML = '<div class="text-center py-8 text-red-400"><p>Failed to load job details.</p><a href="' + url + '" class="text-blue-400 hover:underline mt-2 inline-block">Open full page →</a></div>';
+        });
+}
+</script>
+{% endblock %}

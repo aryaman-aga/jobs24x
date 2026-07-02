@@ -1,0 +1,52 @@
+<section class="bg-gradient-to-br from-gray-950 via-gray-900 to-blue-950 py-20 relative overflow-hidden">
+    <div class="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-500 via-transparent to-transparent"></div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+        <div class="text-center mb-6 animate-fade-in">
+            <p class="text-sm font-semibold text-blue-400 tracking-wide uppercase">Roles from Stripe, Google, SpaceX & 2,400+ more</p>
+        </div>
+        <div class="text-center max-w-4xl mx-auto">
+            <h1 class="text-4xl md:text-6xl font-extrabold leading-tight animate-slide-up">
+                Remote Tech Jobs &<br>
+                <span class="gradient-text">Software Engineer Roles</span>
+            </h1>
+            <p class="mt-4 text-lg md:text-xl text-gray-400 max-w-3xl mx-auto animate-fade-in stagger-1">
+                Find software engineer jobs, remote developer roles, startup jobs, data engineering jobs, DevOps roles and AI/ML openings sourced directly from global company career pages.
+            </p>
+            <div class="mt-8 flex flex-col sm:flex-row justify-center gap-4 animate-fade-in stagger-2">
+                <a href="{% url 'job_list' %}" class="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold text-lg hover:bg-blue-700 transition shadow-lg shadow-blue-600/20 animate-pulse-glow">Browse Opportunities →</a>
+                <a href="{% url 'pricing' %}" class="bg-gray-800 text-gray-300 px-8 py-3 rounded-lg font-semibold text-lg border border-gray-700 hover:border-gray-500 hover:text-white transition">View Pricing</a>
+            </div>
+        </div>
+
+        <div class="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto text-center">
+            <div class="bg-gray-800/50 rounded-xl p-6 border border-gray-700/50 backdrop-blur-sm scroll-reveal">
+                <div class="text-3xl font-bold text-blue-400 counter" data-target="{{ stats.total_jobs|default:13132 }}">0</div>
+                <div class="text-sm text-gray-400 mt-1">Curated Opportunities</div>
+            </div>
+            <div class="bg-gray-800/50 rounded-xl p-6 border border-gray-700/50 backdrop-blur-sm scroll-reveal stagger-1">
+                <div class="text-3xl font-bold text-blue-400 counter" data-target="{{ stats.total_companies|default:2220 }}">0</div>
+                <div class="text-sm text-gray-400 mt-1">Companies Tracked</div>
+            </div>
+            <div class="bg-gray-800/50 rounded-xl p-6 border border-gray-700/50 backdrop-blur-sm scroll-reveal stagger-2">
+                <div class="text-3xl font-bold text-blue-400 counter" data-target="{{ stats.total_countries|default:79 }}">0</div>
+                <div class="text-sm text-gray-400 mt-1">Countries Covered</div>
+            </div>
+            <div class="bg-gray-800/50 rounded-xl p-6 border border-gray-700/50 backdrop-blur-sm scroll-reveal stagger-3">
+                <div class="text-3xl font-bold text-blue-400 counter" data-target="{{ stats.total_users|default:32368 }}">0</div>
+                <div class="text-sm text-gray-400 mt-1">Active Job Seekers</div>
+            </div>
+        </div>
+
+        <div class="mt-6 text-center flex flex-wrap justify-center gap-4 text-sm text-gray-400 animate-fade-in stagger-3">
+            <span class="flex items-center gap-1"><span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span> {{ stats.daily_active|default:"857" }} people joined today</span>
+            <span>⚡ {{ stats.new_jobs_today|default:"196" }} new jobs added today</span>
+            <span>🎯 {{ stats.interviews_today|default:"154" }} interviews scheduled today</span>
+        </div>
+    </div>
+</section>
+
+<script>
+function animateCounters(){document.querySelectorAll('.counter').forEach(c=>{const t=+c.dataset.target,n=+c.textContent;if(n>=t)return;const i=Math.ceil(t/60);let v=0;const u=setInterval(()=>{v=Math.min(v+i,t);c.textContent=v.toLocaleString();if(v>=t)clearInterval(u)},30)})}
+const counterObserver=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){animateCounters();counterObserver.disconnect()}})})
+document.querySelectorAll('.counter').forEach(c=>counterObserver.observe(c))
+</script>

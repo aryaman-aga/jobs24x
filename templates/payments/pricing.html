@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Pricing - Jobs24x{% endblock %}
+{% block content %}
+<section class="py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-4">
+            <p class="text-sm font-semibold text-blue-400">Auto-renew · Recommended · One-time</p>
+            <h1 class="text-4xl font-bold mt-2 text-white">Stop Applying Blindly. Get Direct Access to Hidden Jobs.</h1>
+            <p class="text-gray-400 mt-2">Access 1000+ remote roles before everyone else. All plans include every feature.</p>
+        </div>
+        <div class="flex justify-center gap-4 text-sm text-gray-400 mb-8">
+            <span>🟢 35k+ users already joined</span><span>857 joined today</span><span>⚡ 196 new jobs today</span><span>💬 Users getting interview calls within days</span>
+        </div>
+        <div class="max-w-4xl mx-auto">
+            <table class="w-full bg-gray-800/80 rounded-2xl border border-gray-700 overflow-hidden">
+                <thead>
+                    <tr class="bg-gray-800 border-b border-gray-700">
+                        <th class="p-4 text-left font-semibold text-gray-300">Plan</th>
+                        <th class="p-4 text-center font-semibold text-gray-300">Weekly</th>
+                        <th class="p-4 text-center font-semibold text-gray-300">Monthly</th>
+                        <th class="p-4 text-center font-semibold text-blue-400">6 Months</th>
+                        <th class="p-4 text-center font-semibold text-indigo-400">Yearly</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="border-b border-gray-700"><td class="p-4 text-gray-400">Price</td>{% for plan in plans %}<td class="p-4 text-center font-bold text-lg text-white">₹{{ plan.price|floatformat:"0" }}{% if plan.name != 'weekly' %}<span class="text-sm text-gray-400">/mo</span>{% endif %}</td>{% endfor %}</tr>
+                    <tr class="border-b border-gray-700"><td class="p-4 text-gray-400">Access to hidden jobs</td>{% for plan in plans %}<td class="p-4 text-center text-green-400">✓</td>{% endfor %}</tr>
+                    <tr class="border-b border-gray-700"><td class="p-4 text-gray-400">Know real salaries</td>{% for plan in plans %}<td class="p-4 text-center text-green-400">✓</td>{% endfor %}</tr>
+                    <tr class="border-b border-gray-700"><td class="p-4 text-gray-400">Advanced filters</td>{% for plan in plans %}<td class="p-4 text-center text-green-400">✓</td>{% endfor %}</tr>
+                    <tr class="border-b border-gray-700"><td class="p-4 text-gray-400">Unlimited saved jobs</td>{% for plan in plans %}<td class="p-4 text-center text-green-400">✓</td>{% endfor %}</tr>
+                    <tr class="border-b border-gray-700"><td class="p-4 text-gray-400">Job alerts</td><td class="p-4 text-center text-gray-600">—</td>{% for plan in plans %}{% if not forloop.first %}<td class="p-4 text-center text-green-400">✓</td>{% endif %}{% endfor %}</tr>
+                    <tr class="border-b border-gray-700"><td class="p-4 text-gray-400">Early access</td><td class="p-4 text-center text-gray-600">—</td><td class="p-4 text-center text-gray-600">—</td><td class="p-4 text-center text-green-400">✓</td><td class="p-4 text-center text-green-400">✓</td></tr>
+                    <tr><td class="p-4 text-gray-400">Priority support</td><td class="p-4 text-center text-gray-600">—</td><td class="p-4 text-center text-gray-600">—</td><td class="p-4 text-center text-gray-600">—</td><td class="p-4 text-center text-green-400">✓</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 max-w-4xl mx-auto mt-8">
+            {% for plan in plans %}
+            <div class="bg-gray-800 rounded-2xl p-6 border border-gray-700 text-center relative transition-all duration-300 hover:border-blue-500/50 hover:-translate-y-1 {% if forloop.counter == 3 %}ring-2 ring-blue-500{% elif forloop.counter == 4 %}ring-2 ring-indigo-500{% endif %}">
+                {% if forloop.counter == 3 %}<span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs px-4 py-1 rounded-full font-medium">MOST POPULAR</span>{% endif %}
+                {% if forloop.counter == 4 %}<span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-xs px-4 py-1 rounded-full font-medium">BEST VALUE</span>{% endif %}
+                <h3 class="font-bold text-white">{{ plan.display_name }}</h3>
+                <p class="text-3xl font-bold text-white mt-2">₹{{ plan.price|floatformat:"0" }}{% if plan.name != 'weekly' %}<span class="text-base font-normal text-gray-400">/mo</span>{% endif %}</p>
+                <p class="text-xs text-gray-500 mt-1">{{ plan.price|floatformat:"0" }} {% if plan.name == 'weekly' %}one-time{% else %}billed {{ plan.get_name_display|lower }}{% endif %}</p>
+                <a href="{% url 'signup' %}?plan={{ plan.id }}" class="mt-4 block w-full py-3 rounded-lg font-semibold transition {% if forloop.counter == 3 or forloop.counter == 4 %}bg-blue-600 text-white hover:bg-blue-700{% else %}bg-gray-700 text-gray-300 hover:bg-gray-600{% endif %}">Choose Plan</a>
+            </div>
+            {% empty %}
+            <div class="col-span-full text-center text-gray-500 py-12"><p>No plans configured yet.</p></div>
+            {% endfor %}
+        </div>
+        <p class="text-center text-xs text-gray-500 mt-8">Browse job titles for free. Subscribe to see full details and apply links.</p>
+    </div>
+</section>
+{% endblock %}

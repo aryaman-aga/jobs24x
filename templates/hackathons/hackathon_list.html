@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}Hackathons - Jobs24x{% endblock %}
+{% block content %}
+<section class="py-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-2">
+            <span class="text-xs font-semibold text-green-400 bg-green-900/30 px-3 py-1 rounded-full border border-green-800/50">Always free with signup</span>
+        </div>
+        <h1 class="text-3xl font-bold text-center text-white">Find your next hackathon</h1>
+        <p class="text-center text-gray-400 mt-2">Curated listings from around the world. Online, in-person and hybrid events with real prize pools.</p>
+        <form method="get" class="mt-8">
+            <div class="flex flex-wrap justify-center gap-2 mb-4">
+                <button type="submit" name="mode" value="" class="px-4 py-2 rounded-full text-sm font-medium transition {% if not current_mode %}bg-blue-600 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700{% endif %}">All modes</button>
+                {% for key, label in modes %}
+                <button type="submit" name="mode" value="{{ key }}" class="px-4 py-2 rounded-full text-sm font-medium transition {% if current_mode == key %}bg-blue-600 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700{% endif %}">{{ label }}</button>
+                {% endfor %}
+            </div>
+            <div class="flex flex-wrap justify-center gap-2 mb-4">
+                <button type="submit" name="status" value="" class="px-4 py-2 rounded-full text-sm font-medium transition {% if not current_status %}bg-blue-600 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700{% endif %}">All</button>
+                <button type="submit" name="status" value="upcoming" class="px-4 py-2 rounded-full text-sm font-medium transition {% if current_status == 'upcoming' %}bg-blue-600 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700{% endif %}">Upcoming</button>
+                <button type="submit" name="status" value="closing" class="px-4 py-2 rounded-full text-sm font-medium transition {% if current_status == 'closing' %}bg-blue-600 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700{% endif %}">Closing soon</button>
+            </div>
+            <div class="flex flex-wrap justify-center gap-2">
+                {% for key, label in categories %}
+                <button type="submit" name="category" value="{{ key }}" class="px-3 py-1 rounded-full text-xs font-medium transition {% if current_category == key %}bg-blue-600 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700{% endif %}">{{ label }}</button>
+                {% endfor %}
+            </div>
+        </form>
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for hack in hackathons %}
+            <div class="bg-gray-800/50 rounded-xl p-5 border border-gray-700/50 hover:border-blue-500/40 hover:-translate-y-1 transition-all duration-300">
+                <h3 class="font-semibold text-white">{{ hack.title }}</h3>
+                <p class="text-sm text-gray-400 mt-1">{{ hack.organizer }}</p>
+                <div class="mt-3 flex flex-wrap gap-2 text-xs">
+                    <span class="bg-blue-900/50 text-blue-300 px-2 py-1 rounded-full border border-blue-800/50">{{ hack.get_mode_display }}</span>
+                    <span class="bg-purple-900/50 text-purple-300 px-2 py-1 rounded-full border border-purple-800/50">{{ hack.get_category_display }}</span>
+                    {% if hack.prize_pool %}<span class="bg-yellow-900/50 text-yellow-300 px-2 py-1 rounded-full border border-yellow-800/50">🏆 {{ hack.prize_pool }}</span>{% endif %}
+                </div>
+                <div class="mt-3 text-sm text-gray-400">{{ hack.start_date|date:"M d" }} - {{ hack.end_date|date:"M d, Y" }}</div>
+                <a href="{{ hack.apply_url }}" target="_blank" rel="noopener noreferrer" class="mt-4 inline-block text-blue-400 font-medium text-sm hover:underline">View Details →</a>
+            </div>
+            {% empty %}
+            <div class="col-span-full text-center py-16 text-gray-500"><p class="text-lg">No hackathons found.</p></div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

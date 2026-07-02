@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Remote Tech Jobs & Software Engineer Roles | Jobs24x{% endblock %}
+
+{% block content %}
+
+{% include 'pages/_hero.html' with stats=stats %}
+
+{% include 'pages/_company_marquee.html' %}
+
+{% include 'pages/_salary_bands.html' %}
+
+{% include 'pages/_testimonials.html' %}
+
+{% include 'pages/_why_jobs24x.html' %}
+
+{% include 'pages/_how_it_works.html' %}
+
+{% include 'pages/_pricing_section.html' with plans=plans %}
+
+{% include 'pages/_faq.html' %}
+
+{% include 'pages/_affiliate_cta.html' %}
+
+{% include 'pages/_final_cta.html' %}
+{% endblock %}

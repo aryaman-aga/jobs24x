@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}{{ job.title }} at {{ job.company }} - Jobs24x{% endblock %}
+{% block content %}
+<section class="py-10">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <a href="{% url 'job_list' %}" class="text-blue-400 hover:underline text-sm mb-4 inline-block transition">← Back to jobs</a>
+        <div class="bg-gray-800/80 rounded-2xl p-8 border border-gray-700/50">
+            <div class="flex items-start justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-white">{{ job.title }}</h1>
+                    <p class="text-gray-400 mt-1">{{ job.company }} {% if job.location %}· {{ job.location }}{% endif %}</p>
+                </div>
+                {% if user.is_authenticated %}
+                <form method="post" action="{% if is_saved %}{% url 'unsave_job' job.pk %}{% else %}{% url 'save_job' job.pk %}{% endif %}">
+                    {% csrf_token %}
+                    <button type="submit" class="text-2xl {% if is_saved %}text-red-400{% else %}text-gray-500{% endif %} hover:text-red-400 transition">{% if is_saved %}❤️{% else %}🤍{% endif %}</button>
+                </form>
+                {% endif %}
+            </div>
+
+            <div class="mt-4 flex flex-wrap gap-2">
+                {% if job.remote %}<span class="bg-green-900/50 text-green-300 px-3 py-1 rounded-full text-sm border border-green-800/50">🌍 Remote</span>{% endif %}
+                {% if job.country %}<span class="bg-gray-700 text-gray-300 px-3 py-1 rounded-full text-sm">{{ job.country }}</span>{% endif %}
+                {% if job.category %}<span class="bg-blue-900/50 text-blue-300 px-3 py-1 rounded-full text-sm border border-blue-800/50">{{ job.get_category_display }}</span>{% endif %}
+                {% if job.experience_level %}<span class="bg-purple-900/50 text-purple-300 px-3 py-1 rounded-full text-sm border border-purple-800/50">{{ job.get_experience_level_display }}</span>{% endif %}
+            </div>
+
+            {% if job.salary_min and job.salary_max %}
+            <div class="mt-4 p-4 bg-gray-700/50 rounded-lg border border-gray-600/50">
+                <p class="text-sm text-gray-400">Salary Range</p>
+                <p class="text-xl font-bold text-blue-400">₹{{ job.salary_min|floatformat:"0" }} - ₹{{ job.salary_max|floatformat:"0" }}</p>
+            </div>
+            {% endif %}
+
+            {% if can_view_details %}
+                <div class="mt-6">
+                    <h2 class="font-semibold text-lg text-white mb-3">About this role</h2>
+                    <div class="text-gray-300 leading-relaxed whitespace-pre-line">{{ job.description }}</div>
+                </div>
+                <a href="{{ job.apply_url }}" target="_blank" rel="noopener noreferrer" class="mt-6 inline-block bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">Apply Now →</a>
+            {% else %}
+                <div class="mt-8 bg-gradient-to-r from-blue-900/30 to-indigo-900/30 rounded-xl p-8 text-center border border-blue-800/30">
+                    <h3 class="text-lg font-bold text-white">Subscribe to view full details</h3>
+                    <p class="text-gray-400 mt-2">Get access to the complete job description, apply link, and salary information.</p>
+                    <a href="{% url 'pricing' %}" class="mt-4 inline-block bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">View Plans →</a>
+                </div>
+            {% endif %}
+
+            {% if job.posted_at %}
+            <p class="mt-6 text-xs text-gray-500">Posted: {{ job.posted_at|date:"M d, Y" }}</p>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}
