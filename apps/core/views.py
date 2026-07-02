@@ -4,11 +4,63 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.http import HttpResponse, JsonResponse
 from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
+from django.utils import timezone
+from io import StringIO
+from django.core.management import call_command
 from apps.jobs.models import CATEGORY_CHOICES, EXPERIENCE_CHOICES
 
 
 def health(request):
     return JsonResponse({'status': 'ok', 'app': 'jobs24X7'})
+
+
+@csrf_exempt
+def scrape_now(request):
+    if request.method == 'POST':
+        token = request.POST.get('token', '')
+    else:
+        token = request.GET.get('token', '')
+
+    if token != settings.SCRAPER_SECRET_TOKEN:
+        return JsonResponse({'error': 'invalid token'}, status=403)
+
+    out = StringIO()
+    jobs_created = 0
+    hackathons_created = 0
+    errors = []
+
+    try:
+        call_command('run_scraper', stdout=out, stderr=out)
+    except Exception as e:
+        errors.append(f'run_scraper: {e}')
+
+    try:
+        call_command('scrape_hackathons', stdout=out, stderr=out)
+    except Exception as e:
+        errors.append(f'scrape_hackathons: {e}')
+
+    try:
+        call_command('daily_refresh', stdout=out, stderr=out)
+    except Exception as e:
+        errors.append(f'daily_refresh: {e}')
+
+    import re
+    output = out.getvalue()
+    m = re.search(r'created (\d+) new jobs', output)
+    if m:
+        jobs_created = int(m.group(1))
+    m = re.search(r'created (\d+) new hackathons', output)
+    if m:
+        hackathons_created = int(m.group(1))
+
+    return JsonResponse({
+        'status': 'ok' if not errors else 'partial',
+        'jobs_created': jobs_created,
+        'hackathons_created': hackathons_created,
+        'errors': errors,
+        'output': output[-2000:] if output else '',
+    })
 
 
 def logout_view(request):

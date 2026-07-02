@@ -8,4 +8,5 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('signed-out/', views.signed_out, name='signed_out'),
     path('signup/', views.signup, name='signup'),
+    path('api/scrape/', views.scrape_now, name='scrape_now'),
 ]
