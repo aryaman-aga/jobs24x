@@ -4,6 +4,7 @@
 {% block title %}Hand-Picked Opportunities - Jobs24X7{% endblock %}
 {% block content %}
 <link rel="stylesheet" href="{% static 'css/glare-card.css' %}">
+<link rel="stylesheet" href="{% static 'css/location-dropdown.css' %}">
 <section class="py-10">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-8 animate-fade-in">
@@ -34,9 +35,10 @@
                         <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                         <input type="text" name="q" value="{{ current_search }}" placeholder="Search title, company..." class="w-full pl-9 pr-3 py-2 bg-gray-800/60 border border-gray-700 rounded-lg text-white text-sm placeholder-gray-500 focus:ring-2 focus:ring-blue-600/30 focus:border-blue-600/50 outline-none transition">
                     </div>
-                    <div class="relative flex-1 min-w-0">
-                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                        <input type="text" name="location" value="{{ current_location }}" placeholder="City or country..." class="w-full pl-9 pr-3 py-2 bg-gray-800/60 border border-gray-700 rounded-lg text-white text-sm placeholder-gray-500 focus:ring-2 focus:ring-blue-600/30 focus:border-blue-600/50 outline-none transition">
+                    <div class="location-wrap">
+                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        <input type="text" name="location" value="{{ current_location }}" placeholder="City or country..." autocomplete="off" class="location-input">
+                        <div class="location-dropdown"><div class="location-dropdown-inner"></div></div>
                     </div>
                     <div class="flex items-center gap-2 shrink-0">
                         <input type="checkbox" name="remote" value="true" {% if current_remote == 'true' %}checked{% endif %} class="hidden" id="remoteCheckbox">
@@ -49,6 +51,20 @@
                 </div>
             </div>
         </form>
+
+        {% if user.is_authenticated and user.profile.preferred_categories and not current_category and not current_experience and not current_location %}
+        <div class="flex items-center justify-between bg-blue-900/20 border border-blue-700/30 rounded-xl px-5 py-3 mb-6 max-w-4xl mx-auto animate-fade-in">
+            <p class="text-sm text-blue-300">
+                Showing jobs matching your preferences
+                {% if user.profile.preferred_categories %}
+                {% for cat in user.profile.preferred_categories %}
+                <span class="bg-blue-800/40 text-blue-200 px-2 py-0.5 rounded text-xs ml-1">{{ cat }}</span>
+                {% endfor %}
+                {% endif %}
+            </p>
+            <a href="{% url 'job_list' %}?all=1" class="text-xs text-gray-400 hover:text-white transition ml-3 shrink-0">Show all jobs ×</a>
+        </div>
+        {% endif %}
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {% for job in jobs %}
@@ -121,6 +137,7 @@
 {% endblock %}
 {% block scripts %}
 <script src="{% static 'js/glare-card.js' %}"></script>
+<script src="{% static 'js/location-dropdown.js' %}"></script>
 <script>
 var lockedModalHtml = '<div class="text-center py-8"><div class="text-5xl mb-4">🔒</div><h3 class="text-xl font-bold text-white mb-3">Subscribe to view</h3><p class="text-gray-400 mb-2 text-sm">Full details, salary info, and apply links are for subscribers only.</p><p class="text-xs text-gray-500 mb-6">First 3 jobs are always free. Plans start at ₹99.</p><a href="/pricing/" class="bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-800 transition inline-block">View Plans →</a></div>';
 function showLockedModal() {

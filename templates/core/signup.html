@@ -54,7 +54,19 @@
                             </a>
                         </div>
 
-                        <button type="submit" class="w-full bg-gradient-to-r from-blue-700 to-blue-600 text-white py-2.5 rounded-xl font-semibold text-sm hover:from-blue-800 hover:to-blue-700 transition-all duration-300 shadow-lg shadow-blue-700/20 active:scale-[0.98] hidden lg:block mt-6">
+                        <label class="flex items-start gap-3 mt-6 cursor-pointer group">
+                            <input type="checkbox" name="accept_terms" required class="mt-0.5 rounded bg-gray-800 border-gray-600 text-blue-700 focus:ring-blue-600 shrink-0">
+                            <span class="text-xs text-gray-400 group-hover:text-gray-300 transition leading-relaxed">
+                                I have read and agree to the
+                                <a href="{% url 'terms' %}" target="_blank" class="text-blue-500 hover:text-blue-400 underline">Terms & Conditions</a>
+                                and
+                                <a href="{% url 'privacy' %}" target="_blank" class="text-blue-500 hover:text-blue-400 underline">Privacy Policy</a>.
+                                I understand this is a <strong class="text-yellow-400">vibe coded hobby project</strong>,
+                                job data may be inaccurate, there are no security guarantees, and I use this app at my own risk.
+                            </span>
+                        </label>
+
+                        <button type="submit" class="w-full bg-gradient-to-r from-blue-700 to-blue-600 text-white py-2.5 rounded-xl font-semibold text-sm hover:from-blue-800 hover:to-blue-700 transition-all duration-300 shadow-lg shadow-blue-700/20 active:scale-[0.98] hidden lg:block mt-4">
                             Create Account
                         </button>
 
@@ -100,6 +112,14 @@
                                 <p class="text-xs text-gray-500 mt-1.5">We'll prioritize jobs in your area</p>
                             </div>
 
+                            <label class="flex items-start gap-3 cursor-pointer group lg:hidden">
+                                <input type="checkbox" name="accept_terms" required class="mt-0.5 rounded bg-gray-800 border-gray-600 text-blue-700 focus:ring-blue-600 shrink-0">
+                                <span class="text-xs text-gray-400 group-hover:text-gray-300 transition leading-relaxed">
+                                    I agree to the
+                                    <a href="{% url 'terms' %}" target="_blank" class="text-blue-500 hover:text-blue-400 underline">Terms</a>
+                                    (vibe coded app, just for fun)
+                                </span>
+                            </label>
                             <button type="submit" class="w-full bg-gradient-to-r from-blue-700 to-blue-600 text-white py-2.5 rounded-xl font-semibold text-sm hover:from-blue-800 hover:to-blue-700 transition-all duration-300 shadow-lg shadow-blue-700/20 active:scale-[0.98] lg:hidden">
                                 Create Account
                             </button>

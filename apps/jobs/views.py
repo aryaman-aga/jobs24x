@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.core.paginator import Paginator
+from django.db.models import Q
 from .models import Job, SavedJob, CATEGORY_CHOICES, EXPERIENCE_CHOICES
 from .dto import JobTranslator, JobQueryHelper
 
@@ -12,8 +13,29 @@ def job_list(request):
     search = request.GET.get('q', '')
     remote = request.GET.get('remote', '')
     location = request.GET.get('location', '')
+    show_all = request.GET.get('all', '')
 
     qs = JobQueryHelper.base_query()
+
+    if not show_all and request.user.is_authenticated and not category and not experience and not location:
+        profile = request.user.profile
+        prefs_used = False
+        if profile.preferred_categories:
+            qs = qs.filter(category__in=profile.preferred_categories)
+            prefs_used = True
+        if profile.preferred_experience:
+            qs = qs.filter(experience_level=profile.preferred_experience)
+            prefs_used = True
+        if profile.preferred_location and not location:
+            qs = qs.filter(
+                Q(location__icontains=profile.preferred_location) |
+                Q(country__icontains=profile.preferred_location)
+            )
+            prefs_used = True
+        if prefs_used:
+            if profile.preferred_categories:
+                category = ','.join(profile.preferred_categories)
+
     qs = JobQueryHelper.apply_filters(qs, category, experience, search, remote, location)
 
     paginator = Paginator(qs, 15)

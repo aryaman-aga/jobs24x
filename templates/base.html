@@ -6,7 +6,11 @@
     <title>{% block title %}Jobs24X7 - Exclusive Job Opportunities{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" href="https://jobs24x.com/favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        *{font-family:'Inter',sans-serif!important}
         [x-cloak]{display:none!important}
         @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
         @keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
@@ -39,8 +43,6 @@
 </head>
 <body class="bg-gray-950 text-gray-100 font-sans antialiased">
 
-    <div id="dark-toggle-init" class="hidden"></div>
-
     {% block top_banner %}
     <div class="bg-gradient-to-r from-blue-700/90 to-indigo-700/90 text-white text-center py-2 text-sm font-medium backdrop-blur-sm overflow-hidden whitespace-nowrap">
         <span class="top-banner-text inline-block sm:text-sm text-[11px] px-1">Weekly plan closing on 30 July · Try now or regret later</span>
@@ -62,10 +64,6 @@
             </div>
 
             <div class="rn-actions">
-                <button onclick="toggleDark()" class="rn-theme-btn" title="Toggle theme">
-                    <svg id="dark-icon2" class="w-5 h-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
-                    <svg id="light-icon2" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                </button>
                 {% if user.is_authenticated %}
                 <a href="{% url 'dashboard' %}" class="rn-btn rn-btn-secondary">Profile</a>
                 <a href="{% url 'logout' %}" class="rn-btn rn-btn-primary">Sign Out</a>
@@ -154,9 +152,6 @@
     </div>
 
     <script>
-        if(localStorage.getItem('darkMode')==='false'){document.documentElement.classList.remove('dark')}else{document.documentElement.classList.add('dark')}
-        function toggleDark(){const d=document.documentElement;d.classList.toggle('dark');localStorage.setItem('darkMode',d.classList.contains('dark'))}
-
         function updateCountdown(){const e=new Date('2026-07-30T23:59:59'),n=new Date,d=e-n;if(d<=0)return;const c=document.getElementById('countdown');c&&(c.textContent=`${Math.floor(d/864e5)}d ${Math.floor(d%864e5/36e5)}h ${Math.floor(d%36e5/6e4)}m ${Math.floor(d%6e4/1e3)}s`)}
         updateCountdown();setInterval(updateCountdown,1e3);
 

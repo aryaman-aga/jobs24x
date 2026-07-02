@@ -15,6 +15,16 @@ def health(request):
     return JsonResponse({'status': 'ok', 'app': 'jobs24X7'})
 
 
+def locations_api(request):
+    from apps.jobs.models import Job
+    locs = Job.objects.filter(is_active=True).values_list('location', flat=True).distinct()
+    locations = sorted(set(l for l in locs if l))
+    defaults = ['Remote', 'Bangalore', 'Mumbai', 'Delhi', 'Pune', 'Hyderabad',
+                'Chennai', 'Kolkata', 'Gurgaon', 'Noida', 'Ahmedabad', 'Jaipur']
+    merged = list(dict.fromkeys(defaults + locations))
+    return JsonResponse({'locations': merged})
+
+
 @csrf_exempt
 def scrape_now(request):
     if request.method == 'POST':
@@ -79,6 +89,10 @@ def signup(request):
         email = request.POST.get('email')
         password1 = request.POST.get('password1')
         password2 = request.POST.get('password2')
+
+        if not request.POST.get('accept_terms'):
+            messages.error(request, 'You must accept the Terms & Conditions to create an account.')
+            return render(request, 'core/signup.html', ctx)
 
         if password1 != password2:
             messages.error(request, 'Passwords do not match.')
