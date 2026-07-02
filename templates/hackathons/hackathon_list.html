@@ -36,12 +36,12 @@
             </div>
         </form>
 
-        {% if user.is_authenticated %}
+        {% if user.is_authenticated and not is_subscribed %}
         <div class="flex justify-center mt-4">
             <div class="bg-gray-800/50 border border-gray-700/50 rounded-xl px-5 py-2 text-sm flex items-center gap-2">
-                <span>📋</span>
-                <span class="text-gray-300">{{ remaining_apps }} of {{ max_free_apps }} free applications remaining</span>
-                {% if remaining_apps <= 0 %}
+                <span>👁️</span>
+                <span class="text-gray-300">{{ remaining_visits }} of {{ max_free_visits }} free page visits remaining</span>
+                {% if remaining_visits <= 0 %}
                 <a href="{% url 'pricing' %}" class="text-blue-400 hover:underline ml-2 font-medium">Upgrade →</a>
                 {% endif %}
             </div>
@@ -63,18 +63,18 @@
                 </div>
                 <div class="mt-4 flex items-center gap-2">
                     {% if user.is_authenticated %}
-                        {% if hack.id in applied_ids %}
-                            <span class="text-green-400 text-sm font-medium">✅ Applied</span>
-                        {% elif remaining_apps > 0 or user.profile.is_subscribed %}
-                            <a href="{% url 'apply_hackathon' hack.id %}" class="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700 transition">Apply Now →</a>
+                        {% if hack.id in visited_ids %}
+                            <a href="{{ hack.apply_url }}" target="_blank" rel="noopener noreferrer" class="text-gray-400 text-sm hover:text-white transition">🔗 Visit again</a>
+                            <span class="text-green-400 text-sm font-medium ml-auto">✅ Visited</span>
+                        {% elif is_subscribed or remaining_visits > 0 %}
+                            <a href="{% url 'visit_hackathon' hack.id %}" class="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700 transition">Visit Page →</a>
                         {% else %}
-                            <span class="text-gray-500 text-sm">🔒 Application limit reached</span>
-                            <a href="{% url 'pricing' %}" class="text-blue-400 text-sm hover:underline">Upgrade</a>
+                            <span class="text-gray-500 text-sm">🔒 Visit limit reached</span>
+                            <a href="{% url 'pricing' %}" class="text-blue-400 text-sm hover:underline ml-auto">Upgrade</a>
                         {% endif %}
                     {% else %}
-                        <a href="{% url 'login' %}?next={% url 'hackathon_list' %}" class="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700 transition">Sign in to Apply →</a>
+                        <a href="{% url 'login' %}?next={% url 'hackathon_list' %}" class="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700 transition">Sign in to Visit →</a>
                     {% endif %}
-                    <a href="{{ hack.apply_url }}" target="_blank" rel="noopener noreferrer" class="text-gray-400 text-sm hover:text-white transition ml-auto">🔗 Visit</a>
                 </div>
             </div>
             {% empty %}

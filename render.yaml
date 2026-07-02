@@ -1,0 +1,64 @@
+services:
+  - type: web
+    name: jobs24x7
+    runtime: python
+    repo: https://github.com/YOUR_USERNAME/jobs24
+    plan: free
+    region: singapore
+    branch: main
+    healthCheckPath: /health/
+    buildCommand: |
+      pip install -r requirements.txt &&
+      python manage.py migrate --noinput &&
+      python manage.py collectstatic --noinput
+    startCommand: gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: DJANGO_ALLOWED_HOSTS
+        value: ".onrender.com,jobs24x7.com,www.jobs24x7.com"
+      - key: DB_ENGINE
+        value: django.db.backends.postgresql
+      - key: DB_NAME
+        fromDatabase:
+          name: jobs24x7-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: jobs24x7-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: jobs24x7-db
+          property: password
+      - key: DB_HOST
+        fromDatabase:
+          name: jobs24x7-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: jobs24x7-db
+          property: port
+      - key: CACHE_URL
+        value: ""
+      - key: SESSION_ENGINE
+        value: django.contrib.sessions.backends.db
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: GOOGLE_OAUTH_CLIENT_ID
+        sync: false
+      - key: GOOGLE_OAUTH_CLIENT_SECRET
+        sync: false
+
+databases:
+  - name: jobs24x7-db
+    plan: free
+    region: singapore
+    databaseType: postgres
+    ipAllowList: []

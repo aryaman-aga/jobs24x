@@ -42,7 +42,13 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
+    'apps.core.middleware.SecurityHeadersMiddleware',
+    'apps.core.middleware.RequestTimingMiddleware',
 ]
+
+if not DEBUG:
+    MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+    MIDDLEWARE.insert(0, 'apps.core.middleware.RateLimitMiddleware')
 
 ROOT_URLCONF = 'config.urls'
 
@@ -71,8 +77,41 @@ DATABASES = {
         'PASSWORD': os.environ.get('DB_PASSWORD', ''),
         'HOST': os.environ.get('DB_HOST', ''),
         'PORT': os.environ.get('DB_PORT', ''),
+        'CONN_MAX_AGE': int(os.environ.get('DB_CONN_MAX_AGE', 300)),
+        'OPTIONS': {
+            'pool': os.environ.get('DB_POOL', 'false') == 'true',
+        } if os.environ.get('DB_ENGINE', '').endswith('postgresql') else {},
     }
 }
+
+# Redis cache
+CACHES = {
+    'default': {
+        'BACKEND': os.environ.get(
+            'CACHE_BACKEND',
+            'django.core.cache.backends.locmem.LocMemCache'
+        ),
+        'LOCATION': os.environ.get('CACHE_URL', 'unique-jobs24x7'),
+        'KEY_PREFIX': 'jobs24x7',
+        'TIMEOUT': 300,
+    }
+}
+if os.environ.get('CACHE_URL', '').startswith('redis://'):
+    CACHES['default'] = {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': os.environ['CACHE_URL'],
+        'KEY_PREFIX': 'jobs24x7',
+        'TIMEOUT': 300,
+        'OPTIONS': {
+            'pool_class': 'redis.connection.BlockingConnectionPool',
+            'pool_highest_priority': True,
+            'max_connections': 20,
+            'retry_on_timeout': True,
+            'socket_keepalive': True,
+            'socket_connect_timeout': 5,
+            'socket_timeout': 5,
+        },
+    }
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
@@ -107,6 +146,7 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -118,7 +158,7 @@ LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
 EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@jobs24x.local')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@jobs24x7.com')
 
 RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID', '')
 RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET', '')
@@ -126,3 +166,16 @@ RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET', '')
 ANYMAIL = {
     'SENDGRID_API_KEY': os.environ.get('SENDGRID_API_KEY', ''),
 }
+
+# Rate limiting
+RATE_LIMIT_REQUESTS = int(os.environ.get('RATE_LIMIT_REQUESTS', 60))
+RATE_LIMIT_WINDOW = int(os.environ.get('RATE_LIMIT_WINDOW', 60))
+
+# Session
+SESSION_ENGINE = os.environ.get('SESSION_ENGINE', 'django.contrib.sessions.backends.db')
+if os.environ.get('CACHE_URL', '').startswith('redis://'):
+    SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+    SESSION_CACHE_ALIAS = 'default'
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 7  # 1 week
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'

@@ -1,10 +1,9 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from django.db.models import Q, Case, When, Value, IntegerField
 from django.core.paginator import Paginator
-from django.utils import timezone
 from .models import Job, SavedJob, CATEGORY_CHOICES, EXPERIENCE_CHOICES
+from .dto import JobTranslator, JobQueryHelper
 
 
 def job_list(request):
@@ -14,52 +13,19 @@ def job_list(request):
     remote = request.GET.get('remote', '')
     location = request.GET.get('location', '')
 
-    jobs = Job.objects.filter(is_active=True)
+    qs = JobQueryHelper.base_query()
+    qs = JobQueryHelper.apply_filters(qs, category, experience, search, remote, location)
 
-    if category:
-        jobs = jobs.filter(category=category)
-    if experience:
-        jobs = jobs.filter(experience_level=experience)
-    if remote == 'true':
-        jobs = jobs.filter(remote=True)
-    if search:
-        jobs = jobs.filter(
-            Q(title__icontains=search) |
-            Q(company__icontains=search) |
-            Q(description__icontains=search)
-        )
-    if location:
-        jobs = jobs.filter(
-            Q(location__icontains=location) |
-            Q(country__icontains=location)
-        )
-    else:
-        jobs = jobs.annotate(
-            india_boost=Case(
-                When(country='IN', then=Value(0)),
-                When(country='India', then=Value(0)),
-                When(location__icontains='India', then=Value(0)),
-                When(location__icontains='Bangalore', then=Value(0)),
-                When(location__icontains='Mumbai', then=Value(0)),
-                When(location__icontains='Delhi', then=Value(0)),
-                When(location__icontains='Pune', then=Value(0)),
-                When(location__icontains='Hyderabad', then=Value(0)),
-                When(location__icontains='Chennai', then=Value(0)),
-                When(location__icontains='Kolkata', then=Value(0)),
-                default=Value(1),
-                output_field=IntegerField(),
-            )
-        ).order_by('india_boost', '-is_featured', '-posted_at', '-created_at')
-
-    paginator = Paginator(jobs, 15)
+    paginator = Paginator(qs, 15)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
 
-    saved_job_ids = []
-    if request.user.is_authenticated:
-        saved_job_ids = list(SavedJob.objects.filter(user=request.user).values_list('job_id', flat=True))
-
-    free_preview_ids = list(paginator.object_list.values_list('pk', flat=True)[:3])
+    user = request.user
+    subscribed = JobTranslator.get_subscribed(user)
+    free_preview_ids = JobTranslator.get_free_preview_ids(
+        page_obj.object_list if page_obj.object_list else Job.objects.filter(is_active=True)
+    )
+    saved_ids = JobTranslator.get_saved_ids(user, [j.pk for j in page_obj.object_list])
 
     context = {
         'jobs': page_obj,
@@ -71,33 +37,34 @@ def job_list(request):
         'current_search': search,
         'current_remote': remote,
         'current_location': location,
-        'saved_job_ids': saved_job_ids,
-        'free_preview_ids': free_preview_ids,
+        'saved_job_ids': list(saved_ids),
+        'free_preview_ids': list(free_preview_ids),
+        'is_subscribed': subscribed,
     }
     return render(request, 'jobs/job_list.html', context)
 
 
 def job_detail(request, pk):
     job = get_object_or_404(Job, pk=pk, is_active=True)
-    is_saved = False
-    if request.user.is_authenticated:
-        is_saved = SavedJob.objects.filter(user=request.user, job=job).exists()
+    user = request.user
+    subscribed = JobTranslator.get_subscribed(user)
 
-    free_preview_ids = list(Job.objects.filter(is_active=True).values_list('pk', flat=True)[:3])
+    free_preview_ids = JobTranslator.get_free_preview_ids(
+        Job.objects.filter(is_active=True)
+    )
     is_free_preview = job.pk in free_preview_ids
+    can_view_details = is_free_preview or subscribed
 
-    can_view_details = is_free_preview
-    if not can_view_details and request.user.is_authenticated:
-        profile = request.user.profile
-        can_view_details = profile.is_subscribed and (
-            not profile.subscription_end or profile.subscription_end > timezone.now()
-        )
+    is_saved = False
+    if user.is_authenticated:
+        is_saved = job.pk in JobTranslator.get_saved_ids(user, [job.pk])
 
     context = {
         'job': job,
         'is_saved': is_saved,
         'is_free_preview': is_free_preview,
         'can_view_details': can_view_details,
+        'is_subscribed': subscribed,
     }
 
     if request.GET.get('modal'):
