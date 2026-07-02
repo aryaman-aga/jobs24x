@@ -182,6 +182,8 @@ if os.environ.get('CACHE_URL', '').startswith('redis://'):
 # Scheduler
 SCHEDULER_ENABLED = os.environ.get('SCHEDULER_ENABLED', 'False').lower() == 'true'
 SCRAPER_SECRET_TOKEN = os.environ.get('SCRAPER_SECRET_TOKEN', '')
+ADZUNA_APP_ID = os.environ.get('ADZUNA_APP_ID', '')
+ADZUNA_APP_KEY = os.environ.get('ADZUNA_APP_KEY', '')
 
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 7  # 1 week
 SESSION_COOKIE_HTTPONLY = True

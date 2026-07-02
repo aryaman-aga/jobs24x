@@ -5,25 +5,12 @@ import logging
 from datetime import timedelta
 
 import requests
-from bs4 import BeautifulSoup
 from django.core.management.base import BaseCommand
 from django.utils import timezone
+from django.conf import settings
 from apps.jobs.models import Job
 
 logger = logging.getLogger(__name__)
-
-USER_AGENTS = [
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36',
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Safari/605.1.15',
-    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/119.0.0.0 Safari/537.36',
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0',
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/121.0.0.0 Safari/537.36',
-]
-
-INDIAN_CITIES = [
-    'Bangalore', 'Mumbai', 'Delhi', 'Pune', 'Hyderabad', 'Chennai',
-    'Kolkata', 'Gurgaon', 'Noida', 'Ahmedabad', 'Jaipur',
-]
 
 CATEGORY_KEYWORDS = {
     'engineering': ['software engineer', 'backend', 'frontend', 'full stack', 'devops', 'sre',
@@ -59,114 +46,26 @@ SALARY_RANGES = {
     'lead': (8000000, 25000000),
 }
 
+ADZUNA_CATEGORIES = [
+    ('it-jobs', 'engineering'),
+    ('engineering-jobs', 'engineering'),
+    ('technology-jobs', 'engineering'),
+    ('data-analyst-jobs', 'data_ai'),
+    ('creative-design-jobs', 'design'),
+    ('sales-jobs', 'sales'),
+    ('marketing-jobs', 'marketing'),
+    ('accounting-finance-jobs', 'operations'),
+    ('admin-jobs', 'operations'),
+    ('consultancy-jobs', 'product'),
+    ('customer-service-jobs', 'sales'),
+    ('graduate-jobs', None),
+    ('hr-jobs', 'operations'),
+]
 
-def get_headers():
-    return {
-        'User-Agent': random.choice(USER_AGENTS),
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'en-IN,en;q=0.9,hi;q=0.8',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'DNT': '1',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1',
-    }
-
-
-def scrape_indeed(location, role_keywords, max_pages=3):
-    jobs_found = []
-    base_url = 'https://in.indeed.com/jobs'
-
-    for keyword in role_keywords:
-        for page in range(max_pages):
-            try:
-                params = {
-                    'q': keyword,
-                    'l': location,
-                    'start': page * 10,
-                }
-                resp = requests.get(
-                    base_url,
-                    params=params,
-                    headers=get_headers(),
-                    timeout=15,
-                )
-                if resp.status_code != 200:
-                    logger.warning(f"Indeed returned {resp.status_code} for {keyword} in {location}")
-                    continue
-
-                soup = BeautifulSoup(resp.text, 'html.parser')
-                cards = soup.select('[class*="job_seen_beacon"], [class*="result"], .job-card, .tapItem')
-
-                if not cards:
-                    cards = soup.select('table.results tbody tr, .jobCard, .job-row')
-
-                for card in cards:
-                    try:
-                        title_el = card.select_one('h2 a, h2 span, [class*="jobTitle"] a, [class*="title"] a')
-                        if not title_el:
-                            continue
-                        title = title_el.get_text(strip=True)
-
-                        company_el = card.select_one('[class*="companyName"], [class*="company"] a, [class*="company"] span')
-                        company = company_el.get_text(strip=True) if company_el else 'Unknown Company'
-
-                        loc_el = card.select_one('[class*="location"], [class*="loc"]')
-                        job_location = loc_el.get_text(strip=True) if loc_el else location
-
-                        salary_el = card.select_one('[class*="salary"], [class*="pay"]')
-                        salary_text = salary_el.get_text(strip=True) if salary_el else ''
-
-                        link_el = card.select_one('h2 a, [class*="jobTitle"] a')
-                        relative_link = link_el.get('href') if link_el else ''
-                        if relative_link and not relative_link.startswith('http'):
-                            relative_link = 'https://in.indeed.com' + relative_link
-                        apply_url = relative_link or f'https://in.indeed.com/viewjob?jk={random.randint(10000,99999)}'
-
-                        desc_el = card.select_one('[class*="summary"], [class*="description"], [class*="snippet"]')
-                        description = desc_el.get_text(strip=True) if desc_el else ''
-
-                        salary_min, salary_max = parse_indeed_salary(salary_text + ' ' + description)
-
-                        remote = any(w in (title + ' ' + description).lower()
-                                     for w in ['remote', 'work from home', 'wfh', 'fully remote', '100% remote'])
-
-                        jobs_found.append({
-                            'title': title,
-                            'company': company,
-                            'location': job_location,
-                            'salary_min': salary_min,
-                            'salary_max': salary_max,
-                            'description': description[:2000],
-                            'apply_url': apply_url,
-                            'remote': remote,
-                            'source': 'Indeed',
-                        })
-                    except Exception:
-                        continue
-
-                delay = random.uniform(2.0, 4.0)
-                time.sleep(delay)
-
-            except requests.RequestException as e:
-                logger.warning(f"Request failed for {keyword} in {location}: {e}")
-                time.sleep(5)
-                continue
-
-    return jobs_found
-
-
-def parse_indeed_salary(text):
-    if not text:
-        return None, None
-    text = text.replace(',', '').replace('\u20b9', '').replace('₹', '').strip()
-    numbers = re.findall(r'(\d{3,})', text)
-    if numbers:
-        nums = [int(n) for n in numbers if int(n) > 1000]
-        if len(nums) >= 2:
-            return min(nums), max(nums)
-        elif len(nums) == 1:
-            return int(nums[0] * 0.7), nums[0]
-    return None, None
+INDIAN_CITIES = [
+    'Bangalore', 'Mumbai', 'Delhi', 'Pune', 'Hyderabad', 'Chennai',
+    'Kolkata', 'Gurgaon', 'Noida', 'Ahmedabad', 'Jaipur',
+]
 
 
 def infer_category(title, description):
@@ -188,6 +87,145 @@ def infer_experience(title, description):
     return random.choices(list(weights.keys()), weights=list(weights.values()), k=1)[0]
 
 
+def fetch_adzuna_jobs(max_total=300):
+    app_id = settings.ADZUNA_APP_ID
+    app_key = settings.ADZUNA_APP_KEY
+    if not app_id or not app_key:
+        logger.warning("Adzuna API keys not configured")
+        return []
+
+    jobs_found = []
+    base_url = 'https://api.adzuna.com/v1/api/jobs/in/search/'
+    per_page = 50
+    max_pages = min(5, max(1, max_total // per_page))
+
+    search_configs = []
+    for adz_cat, our_cat in ADZUNA_CATEGORIES:
+        search_configs.append({'category': adz_cat, 'what': ''})
+    for city in INDIAN_CITIES[:5]:
+        search_configs.append({'what': 'software', 'where': city})
+        search_configs.append({'what': 'data', 'where': city})
+        search_configs.append({'what': 'marketing', 'where': city})
+
+    seen = set()
+
+    for config in search_configs:
+        for page in range(1, max_pages + 1):
+            if len(jobs_found) >= max_total:
+                break
+            try:
+                params = {
+                    'app_id': app_id,
+                    'app_key': app_key,
+                    'results_per_page': per_page,
+                    'page': page,
+                    'content-type': 'application/json',
+                    'max_days_old': 30,
+                }
+                if config.get('what'):
+                    params['what'] = config['what']
+                if config.get('where'):
+                    params['where'] = config['where']
+                if config.get('category'):
+                    params['category'] = config['category']
+
+                resp = requests.get(base_url + str(page), params=params, timeout=20)
+                if resp.status_code != 200:
+                    logger.warning(f"Adzuna returned {resp.status_code} for {config}")
+                    continue
+
+                data = resp.json()
+                results = data.get('results', [])
+                if not results:
+                    break
+
+                for job in results:
+                    job_id = job.get('id')
+                    if job_id and job_id in seen:
+                        continue
+                    if job_id:
+                        seen.add(job_id)
+
+                    title = job.get('title', '')
+                    company = job.get('company', {}).get('display_name', '')
+                    if not title or not company:
+                        continue
+
+                    location = job.get('location', {}).get('display_name', '')
+                    area = job.get('location', {}).get('area', [])
+                    if not location and area:
+                        location = area[-1] if len(area) > 1 else area[0]
+
+                    description = re.sub(r'<[^>]+>', '', job.get('description', ''))[:3000]
+                    apply_url = job.get('redirect_url', '')
+
+                    salary_min = job.get('salary_min')
+                    salary_max = job.get('salary_max')
+                    salary_currency = job.get('salary_currency', 'INR')
+                    contract_type = job.get('contract_type', '')
+                    contract_time = job.get('contract_time', '')
+
+                    job_type = ''
+                    if contract_type:
+                        job_type = contract_type
+                    if contract_time and contract_time not in job_type:
+                        if job_type:
+                            job_type += ' / '
+                        job_type += contract_time.replace('_', ' ')
+
+                    created_str = job.get('created')
+                    posted_at = timezone.now()
+                    if created_str:
+                        try:
+                            from datetime import datetime
+                            posted_at = datetime.strptime(created_str.split('+')[0].split('T')[0], '%Y-%m-%d')
+                            posted_at = timezone.make_aware(posted_at) if timezone.is_naive(posted_at) else posted_at
+                        except (ValueError, IndexError):
+                            posted_at = timezone.now() - timedelta(days=random.randint(0, 14))
+
+                    category = infer_category(title, description)
+                    experience = infer_experience(title, description)
+
+                    is_remote = any(w in (title + ' ' + description).lower()
+                                    for w in ['remote', 'work from home', 'wfh', '100% remote'])
+
+                    jobs_found.append({
+                        'title': title,
+                        'company': company,
+                        'location': location,
+                        'category': category,
+                        'experience_level': experience,
+                        'salary_min': salary_min,
+                        'salary_max': salary_max,
+                        'salary_currency': salary_currency if salary_currency else 'INR',
+                        'remote': is_remote,
+                        'description': description,
+                        'apply_url': apply_url,
+                        'source_url': apply_url,
+                        'source_company': company,
+                        'posted_at': posted_at,
+                        'expires_at': posted_at + timedelta(days=random.randint(14, 45)),
+                        'is_active': True,
+                        'is_featured': False,
+                        'country': 'IN' if any(city.lower() in location.lower() for city in
+                                                ['bangalore', 'mumbai', 'delhi', 'pune', 'hyderabad',
+                                                 'chennai', 'kolkata', 'gurgaon', 'noida', 'ahmedabad',
+                                                 'jaipur', 'india', 'indian']) else '',
+                    })
+
+                time.sleep(0.5)
+
+            except requests.RequestException as e:
+                logger.warning(f"Adzuna request failed: {e}")
+                time.sleep(2)
+                continue
+
+        if len(jobs_found) >= max_total:
+            break
+
+    return jobs_found
+
+
 def generate_fallback_jobs(count):
     companies = [
         ('Stripe', 'US'), ('Vercel', 'US'), ('Linear', 'US'), ('Glean', 'US'),
@@ -201,7 +239,7 @@ def generate_fallback_jobs(count):
         ('Rapido', 'IN'), ('Zepto', 'IN'), ('Blinkit', 'IN'), ('Porter', 'IN'),
         ('CoinDCX', 'IN'), ('BharatPe', 'IN'), ('Upstox', 'IN'), ('Spinny', 'IN'),
         ('Google', 'US'), ('Microsoft', 'US'), ('Amazon', 'US'), ('Meta', 'US'),
-        ('Netflix', 'US'), ('Apple', 'US'), ('Twitter/X', 'US'), ('Uber', 'US'),
+        ('Netflix', 'US'), ('Apple', 'US'), ('Uber', 'US'),
         ('Airbnb', 'US'), ('Spotify', 'SE'), ('Notion', 'US'), ('Figma', 'US'),
         ('Canva', 'AU'), ('Atlassian', 'AU'), ('GitLab', 'US'), ('Supabase', 'US'),
         ('Render', 'US'), ('Railway', 'US'), ('Neon', 'US'), ('PlanetScale', 'US'),
@@ -274,11 +312,11 @@ def generate_fallback_jobs(count):
 
         company_domain = company.lower().replace("'", "").replace(" ", "").replace(".", "")
         domain_map = {
-            'twitter/x': 'x.com',
             'meta': 'metacareers.com',
             'uber': 'uber.com/careers',
             'airbnb': 'airbnb.com/careers',
             'spotify': 'spotify.com/careers',
+            'twitter/x': 'x.com',
         }
         domain = domain_map.get(company_domain, f'careers.{company_domain}.com')
         apply_url = f'https://{domain}/jobs/{random.randint(1000, 9999)}'
@@ -373,11 +411,11 @@ def save_jobs(jobs_data, stdout):
 
 
 class Command(BaseCommand):
-    help = 'Advanced scraper: scrapes Indeed India + generates fallback jobs with real-looking data'
+    help = 'Scraper: Adzuna API (real India jobs) + fallback seed data'
 
     def add_arguments(self, parser):
-        parser.add_argument('--count', type=int, default=100, help='Number of fallback jobs if scraping fails')
-        parser.add_argument('--no-scrape', action='store_true', help='Skip Indeed scraping, only use fallback')
+        parser.add_argument('--count', type=int, default=200, help='Target number of jobs')
+        parser.add_argument('--no-scrape', action='store_true', help='Skip API scraping, only use fallback')
 
     def handle(self, *args, **options):
         count = options['count']
@@ -386,64 +424,29 @@ class Command(BaseCommand):
         now = timezone.now()
 
         self.stdout.write(f"[{now}] Advanced scraper starting...")
-        self.stdout.write(f"Scrape Indeed: {'No' if no_scrape else 'Yes'}")
-        self.stdout.write(f"Fallback count: {count}")
+        self.stdout.write(f"Adzuna API: {'Skipped' if no_scrape else 'Configured' if settings.ADZUNA_APP_ID and settings.ADZUNA_APP_KEY else 'Keys not set (using fallback)'}")
+        self.stdout.write(f"Target: {count} jobs")
 
         all_jobs = []
 
-        if not no_scrape:
-            cities_to_scrape = ['Bangalore', 'Mumbai', 'Delhi', 'Pune', 'Hyderabad', 'Chennai', 'Remote']
-            role_groups = [
-                ['software engineer', 'backend engineer', 'frontend developer'],
-                ['data scientist', 'data analyst', 'machine learning'],
-                ['product manager', 'ux designer', 'devops engineer'],
-                ['full stack', 'android developer', 'ios developer'],
-                ['marketing', 'sales', 'customer success'],
-            ]
-
-            self.stdout.write("Scraping Indeed India...")
-            for city in cities_to_scrape:
-                self.stdout.write(f"  Searching {city}...", ending='')
-                for roles in role_groups:
-                    jobs = scrape_indeed(city, roles, max_pages=2)
-                    all_jobs.extend(jobs)
-                    if jobs:
-                        self.stdout.write(f" {len(jobs)} jobs from {roles[0]}", ending='')
-                    time.sleep(random.uniform(1.0, 2.0))
-                self.stdout.write(f"  → {len([j for j in all_jobs if city in j.get('location', '')])} total from {city}")
-
+        if not no_scrape and settings.ADZUNA_APP_ID and settings.ADZUNA_APP_KEY:
+            self.stdout.write("Fetching jobs from Adzuna API...")
+            all_jobs = fetch_adzuna_jobs(max_total=count)
+            self.stdout.write(f"Adzuna returned {len(all_jobs)} jobs")
         else:
-            self.stdout.write("Indeed scraping skipped.")
+            self.stdout.write("API scraping skipped.")
 
-        self.stdout.write(f"\nIndeed scraping produced {len(all_jobs)} raw results")
+        api_created, api_skipped = save_jobs(all_jobs, self.stdout)
+        self.stdout.write(f"API: {api_created} new, {api_skipped} duplicates skipped")
 
-        processed_indeed = []
-        for job in all_jobs:
-            text = (job['title'] + ' ' + job.get('description', '')).lower()
-            job['category'] = infer_category(job['title'], job.get('description', ''))
-            job['experience_level'] = infer_experience(job['title'], job.get('description', ''))
-            job['source_company'] = job['company']
-            job['source_url'] = job.get('apply_url', '')
-            job['country'] = 'IN' if any(city.lower() in job.get('location', '').lower() for city in
-                                          ['bangalore', 'mumbai', 'delhi', 'pune', 'hyderabad', 'chennai',
-                                           'kolkata', 'gurgaon', 'noida', 'ahmedabad', 'jaipur', 'india']) else ''
-            job['salary_currency'] = 'INR'
-            job['posted_at'] = now - timedelta(days=random.randint(0, 7))
-            job['expires_at'] = now + timedelta(days=random.randint(14, 45))
-            job['is_featured'] = False
-            processed_indeed.append(job)
-
-        indeed_created, indeed_skipped = save_jobs(processed_indeed, self.stdout)
-        self.stdout.write(f"Indeed: {indeed_created} new, {indeed_skipped} duplicates skipped")
-
-        fallback_needed = max(0, count - indeed_created)
+        fallback_needed = max(0, count - api_created)
         if fallback_needed > 0:
             self.stdout.write(f"Generating {fallback_needed} fallback jobs...")
             fallback_jobs = generate_fallback_jobs(fallback_needed)
             fb_created, fb_skipped = save_jobs(fallback_jobs, self.stdout)
             self.stdout.write(f"Fallback: {fb_created} new, {fb_skipped} duplicates skipped")
         else:
-            self.stdout.write("Fallback not needed (enough Indeed jobs)")
+            self.stdout.write("Fallback not needed (enough API jobs)")
 
         elapsed = time.time() - start_time
         total_active = Job.objects.filter(is_active=True).count()

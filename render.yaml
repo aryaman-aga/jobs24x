@@ -64,6 +64,10 @@ services:
         value: "True"
       - key: SCRAPER_SECRET_TOKEN
         sync: false
+      - key: ADZUNA_APP_ID
+        sync: false
+      - key: ADZUNA_APP_KEY
+        sync: false
 
 databases:
   - name: jobs24x7-db
