@@ -2,26 +2,25 @@ from django.core.management.base import BaseCommand
 from django.contrib.sites.models import Site
 from allauth.socialaccount.models import SocialApp
 from apps.payments.models import SubscriptionPlan
+from django.conf import settings
 import os
 
 
 class Command(BaseCommand):
-    help = 'Creates Site, SocialApp, and SubscriptionPlans from env vars'
+    help = 'Sets up Site, SocialApp, and SubscriptionPlans from env vars'
 
     def handle(self, *args, **options):
         domain = os.environ.get('SITE_DOMAIN', 'jobs24x7.onrender.com')
         name = os.environ.get('SITE_NAME', 'Jobs24X7')
 
-        site, created = Site.objects.get_or_create(
-            domain=domain,
-            defaults={'name': name},
-        )
-        if created:
-            self.stdout.write(f'Site created: {domain}')
-        else:
-            site.name = name
-            site.save()
-            self.stdout.write(f'Site updated: {domain}')
+        Site.objects.exclude(pk=settings.SITE_ID).filter(domain=domain).delete()
+
+        site = Site.objects.get(pk=settings.SITE_ID)
+        old_domain = site.domain
+        site.domain = domain
+        site.name = name
+        site.save()
+        self.stdout.write(f'Updated site {settings.SITE_ID}: {old_domain} → {domain}')
 
         client_id = os.environ.get('GOOGLE_CLIENT_ID') or os.environ.get('GOOGLE_OAUTH_CLIENT_ID')
         client_secret = os.environ.get('GOOGLE_CLIENT_SECRET') or os.environ.get('GOOGLE_OAUTH_CLIENT_SECRET')
@@ -34,15 +33,12 @@ class Command(BaseCommand):
                     'secret': client_secret,
                 },
             )
-            if created:
-                app.sites.add(site)
-                self.stdout.write('Google SocialApp created')
-            else:
+            if not created:
                 app.secret = client_secret
                 app.save()
-                if site not in app.sites.all():
-                    app.sites.add(site)
-                self.stdout.write('Google SocialApp updated')
+            if site not in app.sites.all():
+                app.sites.add(site)
+            self.stdout.write(f'Google SocialApp {"created" if created else "updated"}')
         else:
             self.stdout.write('GOOGLE_CLIENT_ID/SECRET not set, skipping SocialApp')
 
