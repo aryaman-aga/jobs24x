@@ -4,7 +4,7 @@
 <section class="py-16">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-4">
-            <p class="text-sm font-semibold text-blue-400">Auto-renew · Recommended · One-time</p>
+            <p class="text-sm font-semibold text-blue-500">Auto-renew · Recommended · One-time</p>
             <h1 class="text-4xl font-bold mt-2 text-white">Stop Applying Blindly. Get Direct Access to Hidden Jobs.</h1>
             <p class="text-gray-400 mt-2">Access 1000+ remote roles before everyone else. All plans include every feature.</p>
         </div>
@@ -19,7 +19,7 @@
                         <th class="p-4 text-left font-semibold text-gray-300">Plan</th>
                         <th class="p-4 text-center font-semibold text-gray-300">Weekly</th>
                         <th class="p-4 text-center font-semibold text-gray-300">Monthly</th>
-                        <th class="p-4 text-center font-semibold text-blue-400">6 Months</th>
+                        <th class="p-4 text-center font-semibold text-blue-500">6 Months</th>
                         <th class="p-4 text-center font-semibold text-indigo-400">Yearly</th>
                     </tr>
                 </thead>
@@ -38,8 +38,8 @@
         </div>
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 max-w-4xl mx-auto mt-8">
             {% for plan in plans %}
-            <div class="bg-gray-800 rounded-2xl p-6 border border-gray-700 text-center relative transition-all duration-300 hover:border-blue-500/50 hover:-translate-y-1 {% if plan.name == 'monthly' %}ring-2 ring-blue-500{% elif plan.name == 'yearly' %}ring-2 ring-indigo-500{% endif %}">
-                {% if plan.name == 'monthly' %}<span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs px-4 py-1 rounded-full font-medium">MOST POPULAR</span>{% endif %}
+            <div class="bg-gray-800 rounded-2xl p-6 border border-gray-700 text-center relative transition-all duration-300 hover:border-blue-600/50 hover:-translate-y-1 {% if plan.name == 'monthly' %}ring-2 ring-blue-600{% elif plan.name == 'yearly' %}ring-2 ring-indigo-500{% endif %}">
+                {% if plan.name == 'monthly' %}<span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-700 text-white text-xs px-4 py-1 rounded-full font-medium">MOST POPULAR</span>{% endif %}
                 {% if plan.name == 'yearly' %}<span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-xs px-4 py-1 rounded-full font-medium">BEST VALUE</span>{% endif %}
                 <h3 class="font-bold text-white">{{ plan.display_name }}</h3>
                 <p class="text-3xl font-bold text-white mt-2">₹{{ plan.price|floatformat:"0" }}{% if plan.name != 'weekly' %}<span class="text-base font-normal text-gray-400">/mo</span>{% endif %}</p>
@@ -55,9 +55,9 @@
                 <p class="text-xs text-gray-500 mt-1">₹{{ plan.price|floatformat:"0" }} billed monthly</p>
                 {% endif %}
                 {% if user.is_authenticated %}
-                <button onclick="payWithRazorpay({{ plan.id }})" class="mt-4 block w-full py-3 rounded-lg font-semibold transition {% if plan.name == 'monthly' or plan.name == 'yearly' %}bg-blue-600 text-white hover:bg-blue-700{% else %}bg-gray-700 text-gray-300 hover:bg-gray-600{% endif %}">Choose Plan</button>
+                <button onclick="payWithRazorpay({{ plan.id }})" class="mt-4 block w-full py-3 rounded-lg font-semibold transition {% if plan.name == 'monthly' or plan.name == 'yearly' %}bg-blue-700 text-white hover:bg-blue-800{% else %}bg-gray-700 text-gray-300 hover:bg-gray-600{% endif %}">Choose Plan</button>
                 {% else %}
-                <a href="{% url 'signup' %}?plan={{ plan.id }}" class="mt-4 block w-full py-3 rounded-lg font-semibold transition {% if plan.name == 'monthly' or plan.name == 'yearly' %}bg-blue-600 text-white hover:bg-blue-700{% else %}bg-gray-700 text-gray-300 hover:bg-gray-600{% endif %}">Choose Plan</a>
+                <a href="{% url 'signup' %}?plan={{ plan.id }}" class="mt-4 block w-full py-3 rounded-lg font-semibold transition {% if plan.name == 'monthly' or plan.name == 'yearly' %}bg-blue-700 text-white hover:bg-blue-800{% else %}bg-gray-700 text-gray-300 hover:bg-gray-600{% endif %}">Choose Plan</a>
                 {% endif %}
             </div>
             {% empty %}

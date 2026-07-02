@@ -20,23 +20,23 @@
         <form method="get" class="mt-8">
             <div class="overflow-x-auto scrollbar-thin -mx-1 px-1 mb-4">
                 <div class="flex justify-center gap-2 min-w-max">
-                    <button type="submit" name="mode" value="" class="px-4 py-2 rounded-full text-sm font-medium transition whitespace-nowrap {% if not current_mode %}bg-blue-600 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700{% endif %}">All modes</button>
+                    <button type="submit" name="mode" value="" class="px-4 py-2 rounded-full text-sm font-medium transition whitespace-nowrap {% if not current_mode %}bg-blue-700 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700{% endif %}">All modes</button>
                     {% for key, label in modes %}
-                    <button type="submit" name="mode" value="{{ key }}" class="px-4 py-2 rounded-full text-sm font-medium transition whitespace-nowrap {% if current_mode == key %}bg-blue-600 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700{% endif %}">{{ label }}</button>
+                    <button type="submit" name="mode" value="{{ key }}" class="px-4 py-2 rounded-full text-sm font-medium transition whitespace-nowrap {% if current_mode == key %}bg-blue-700 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700{% endif %}">{{ label }}</button>
                     {% endfor %}
                 </div>
             </div>
             <div class="overflow-x-auto scrollbar-thin -mx-1 px-1 mb-4">
                 <div class="flex justify-center gap-2 min-w-max">
-                    <button type="submit" name="status" value="" class="px-4 py-2 rounded-full text-sm font-medium transition whitespace-nowrap {% if not current_status %}bg-blue-600 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700{% endif %}">All</button>
-                    <button type="submit" name="status" value="upcoming" class="px-4 py-2 rounded-full text-sm font-medium transition whitespace-nowrap {% if current_status == 'upcoming' %}bg-blue-600 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700{% endif %}">Upcoming</button>
-                    <button type="submit" name="status" value="closing" class="px-4 py-2 rounded-full text-sm font-medium transition whitespace-nowrap {% if current_status == 'closing' %}bg-blue-600 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700{% endif %}">Closing soon</button>
+                    <button type="submit" name="status" value="" class="px-4 py-2 rounded-full text-sm font-medium transition whitespace-nowrap {% if not current_status %}bg-blue-700 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700{% endif %}">All</button>
+                    <button type="submit" name="status" value="upcoming" class="px-4 py-2 rounded-full text-sm font-medium transition whitespace-nowrap {% if current_status == 'upcoming' %}bg-blue-700 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700{% endif %}">Upcoming</button>
+                    <button type="submit" name="status" value="closing" class="px-4 py-2 rounded-full text-sm font-medium transition whitespace-nowrap {% if current_status == 'closing' %}bg-blue-700 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700{% endif %}">Closing soon</button>
                 </div>
             </div>
             <div class="overflow-x-auto scrollbar-thin -mx-1 px-1">
                 <div class="flex justify-center gap-2 min-w-max">
                     {% for key, label in categories %}
-                    <button type="submit" name="category" value="{{ key }}" class="px-3 py-1 rounded-full text-xs font-medium transition whitespace-nowrap {% if current_category == key %}bg-blue-600 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700{% endif %}">{{ label }}</button>
+                    <button type="submit" name="category" value="{{ key }}" class="px-3 py-1 rounded-full text-xs font-medium transition whitespace-nowrap {% if current_category == key %}bg-blue-700 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700{% endif %}">{{ label }}</button>
                     {% endfor %}
                 </div>
             </div>
@@ -48,7 +48,7 @@
                 <span>👁️</span>
                 <span class="text-gray-300">{{ remaining_visits }} of {{ max_free_visits }} free page visits remaining</span>
                 {% if remaining_visits <= 0 %}
-                <a href="{% url 'pricing' %}" class="text-blue-400 hover:underline ml-2 font-medium">Upgrade →</a>
+                <a href="{% url 'pricing' %}" class="text-blue-500 hover:underline ml-2 font-medium">Upgrade →</a>
                 {% endif %}
             </div>
         </div>
@@ -56,12 +56,12 @@
 
         <div class="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {% for hack in hackathons %}
-            <div class="bg-gray-800/50 rounded-xl p-5 border border-gray-700/50 hover:border-blue-500/40 hover:-translate-y-1 transition-all duration-300 flex flex-col">
+            <div class="bg-gray-800/50 rounded-xl p-5 border border-gray-700/50 hover:border-blue-600/40 hover:-translate-y-1 transition-all duration-300 flex flex-col">
                 <div class="flex-1">
                     <h3 class="font-semibold text-white">{{ hack.title }}</h3>
                     <p class="text-sm text-gray-400 mt-1">{{ hack.organizer }}</p>
                     <div class="mt-3 flex flex-wrap gap-2 text-xs">
-                        <span class="bg-blue-900/50 text-blue-300 px-2 py-1 rounded-full border border-blue-800/50">{{ hack.get_mode_display }}</span>
+                        <span class="bg-blue-900/50 text-blue-400 px-2 py-1 rounded-full border border-blue-800/50">{{ hack.get_mode_display }}</span>
                         <span class="bg-purple-900/50 text-purple-300 px-2 py-1 rounded-full border border-purple-800/50">{{ hack.get_category_display }}</span>
                         {% if hack.prize_pool %}<span class="bg-yellow-900/50 text-yellow-300 px-2 py-1 rounded-full border border-yellow-800/50">🏆 {{ hack.prize_pool }}</span>{% endif %}
                     </div>
@@ -73,13 +73,13 @@
                             <a href="{{ hack.apply_url }}" target="_blank" rel="noopener noreferrer" class="text-gray-400 text-sm hover:text-white transition">🔗 Visit again</a>
                             <span class="text-green-400 text-sm font-medium ml-auto">✅ Visited</span>
                         {% elif is_subscribed or remaining_visits > 0 %}
-                            <a href="{% url 'visit_hackathon' hack.id %}" class="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700 transition">Visit Page →</a>
+                            <a href="{% url 'visit_hackathon' hack.id %}" class="bg-blue-700 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-800 transition">Visit Page →</a>
                         {% else %}
                             <span class="text-gray-500 text-sm">🔒 Visit limit reached</span>
-                            <a href="{% url 'pricing' %}" class="text-blue-400 text-sm hover:underline ml-auto">Upgrade</a>
+                            <a href="{% url 'pricing' %}" class="text-blue-500 text-sm hover:underline ml-auto">Upgrade</a>
                         {% endif %}
                     {% else %}
-                        <a href="{% url 'login' %}?next={% url 'hackathon_list' %}" class="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700 transition">Sign in to Visit →</a>
+                        <a href="{% url 'login' %}?next={% url 'hackathon_list' %}" class="bg-blue-700 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-800 transition">Sign in to Visit →</a>
                     {% endif %}
                 </div>
             </div>

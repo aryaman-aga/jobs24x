@@ -10,7 +10,7 @@
             <div class="flex flex-wrap gap-2 mt-2">
                 {% if job.remote %}<span class="bg-green-900/50 text-green-300 text-xs px-2 py-1 rounded-full">🌍 Remote</span>{% endif %}
                 {% if job.country %}<span class="bg-gray-700 text-gray-300 text-xs px-2 py-1 rounded-full">{{ job.country }}</span>{% endif %}
-                {% if job.category %}<span class="bg-blue-900/50 text-blue-300 text-xs px-2 py-1 rounded-full">{{ job.get_category_display }}</span>{% endif %}
+                {% if job.category %}<span class="bg-blue-900/50 text-blue-400 text-xs px-2 py-1 rounded-full">{{ job.get_category_display }}</span>{% endif %}
                 {% if job.experience_level %}<span class="bg-purple-900/50 text-purple-300 text-xs px-2 py-1 rounded-full">{{ job.get_experience_level_display }}</span>{% endif %}
             </div>
         </div>
@@ -19,7 +19,7 @@
     {% if job.salary_min and job.salary_max %}
     <div class="p-4 bg-gray-800/80 rounded-lg border border-gray-700">
         <p class="text-sm text-gray-400">Salary Range</p>
-        <p class="text-xl font-bold text-blue-400">₹{{ job.salary_min|floatformat:"0" }} - ₹{{ job.salary_max|floatformat:"0" }}</p>
+        <p class="text-xl font-bold text-blue-500">₹{{ job.salary_min|floatformat:"0" }} - ₹{{ job.salary_max|floatformat:"0" }}</p>
     </div>
     {% endif %}
 
@@ -28,14 +28,14 @@
             <h4 class="font-semibold text-white mb-2">About this role</h4>
             <div class="text-gray-300 leading-relaxed whitespace-pre-line text-sm">{{ job.description|truncatewords:100 }}</div>
         </div>
-        <a href="{{ job.apply_url }}" target="_blank" rel="noopener noreferrer" class="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition text-sm">Apply Now →</a>
+        <a href="{{ job.apply_url }}" target="_blank" rel="noopener noreferrer" class="inline-block bg-blue-700 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-800 transition text-sm">Apply Now →</a>
     {% else %}
         <div class="bg-gradient-to-r from-blue-900/30 to-indigo-900/30 rounded-xl p-6 text-center border border-blue-800/30">
             <div class="text-4xl mb-3">🔒</div>
             <h4 class="font-bold text-white">Subscribe to view full details</h4>
             <p class="text-gray-400 mt-1 text-sm">Get access to the complete job description, apply link, and salary information.</p>
             <p class="text-xs text-gray-500 mt-2 mb-4">First 3 jobs are always free. Unlock all with a plan starting at ₹149.</p>
-            <a href="{% url 'pricing' %}" class="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition text-sm">View Plans →</a>
+            <a href="{% url 'pricing' %}" class="inline-block bg-blue-700 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-800 transition text-sm">View Plans →</a>
         </div>
     {% endif %}
 
