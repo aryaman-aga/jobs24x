@@ -66,3 +66,21 @@ class SavedJob(models.Model):
 
     def __str__(self):
         return f"{self.user.email} saved {self.job.title}"
+
+
+class ScrapeLog(models.Model):
+    run_type = models.CharField(max_length=50, default='full')
+    started_at = models.DateTimeField()
+    completed_at = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(max_length=20, default='running')
+    jobs_created = models.IntegerField(default=0)
+    hackathons_created = models.IntegerField(default=0)
+    jobs_expired = models.IntegerField(default=0)
+    hackathons_expired = models.IntegerField(default=0)
+    error = models.TextField(blank=True, default='')
+
+    class Meta:
+        ordering = ['-started_at']
+
+    def __str__(self):
+        return f"{self.run_type} @ {self.started_at} ({self.status})"

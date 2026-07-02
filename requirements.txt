@@ -21,3 +21,4 @@ django-ratelimit>=4.1
 prometheus-client>=0.21
 razorpay>=1.4
 python-dotenv>=1.0
+apscheduler>=3.10

@@ -13,6 +13,10 @@ class Command(BaseCommand):
     help = 'Seed the database with sample data'
 
     def handle(self, *args, **options):
+        if SubscriptionPlan.objects.exists():
+            self.stdout.write(self.style.WARNING("Data already exists, skipping seed"))
+            return
+
         self.stdout.write("Seeding database...")
 
         Job.objects.all().delete()

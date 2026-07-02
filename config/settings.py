@@ -179,6 +179,10 @@ SESSION_ENGINE = os.environ.get('SESSION_ENGINE', 'django.contrib.sessions.backe
 if os.environ.get('CACHE_URL', '').startswith('redis://'):
     SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
     SESSION_CACHE_ALIAS = 'default'
+# Scheduler
+SCHEDULER_ENABLED = os.environ.get('SCHEDULER_ENABLED', 'False').lower() == 'true'
+SCRAPER_SECRET_TOKEN = os.environ.get('SCRAPER_SECRET_TOKEN', '')
+
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 7  # 1 week
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
