@@ -4,7 +4,7 @@
 {% block top_banner %}{% endblock %}
 {% block content %}
 <section class="relative min-h-screen flex items-center justify-center py-16 px-4 overflow-hidden bg-gradient-to-br from-gray-950 via-blue-950 to-gray-950">
-    <div class="absolute inset-0 opacity-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-500 via-transparent to-transparent pointer-events-none"></div>
+    <div class="absolute inset-0 opacity-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-600 via-transparent to-transparent pointer-events-none"></div>
 
     <div class="relative w-full max-w-4xl animate-fade-in">
         <div class="bg-gray-900/70 backdrop-blur-xl rounded-3xl border border-gray-800 shadow-[0_0_40px_rgba(59,130,246,0.08)] overflow-hidden">
@@ -29,17 +29,17 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-300 mb-1">Email</label>
                                 <input type="email" name="email" required placeholder="you@example.com"
-                                    class="w-full px-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 outline-none transition-all duration-300 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 focus:bg-gray-800/80 hover:border-gray-600 text-sm">
+                                    class="w-full px-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 outline-none transition-all duration-300 focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20 focus:bg-gray-800/80 hover:border-gray-600 text-sm">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-300 mb-1">Password</label>
                                 <input type="password" name="password1" required placeholder="Create a password"
-                                    class="w-full px-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 outline-none transition-all duration-300 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 focus:bg-gray-800/80 hover:border-gray-600 text-sm">
+                                    class="w-full px-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 outline-none transition-all duration-300 focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20 focus:bg-gray-800/80 hover:border-gray-600 text-sm">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-300 mb-1">Confirm Password</label>
                                 <input type="password" name="password2" required placeholder="Confirm your password"
-                                    class="w-full px-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 outline-none transition-all duration-300 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 focus:bg-gray-800/80 hover:border-gray-600 text-sm">
+                                    class="w-full px-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 outline-none transition-all duration-300 focus:border-blue-600/50 focus:ring-2 focus:ring-blue-600/20 focus:bg-gray-800/80 hover:border-gray-600 text-sm">
                             </div>
                         </div>
 
@@ -54,9 +54,13 @@
                             </a>
                         </div>
 
+                        <button type="submit" class="w-full bg-gradient-to-r from-blue-700 to-blue-600 text-white py-2.5 rounded-xl font-semibold text-sm hover:from-blue-800 hover:to-blue-700 transition-all duration-300 shadow-lg shadow-blue-700/20 active:scale-[0.98] hidden lg:block mt-6">
+                            Create Account
+                        </button>
+
                         <p class="mt-5 text-center text-sm text-gray-400">
                             Already have an account?
-                            <a href="{% url 'login' %}" class="text-blue-400 hover:text-blue-300 font-medium transition">Sign In</a>
+                            <a href="{% url 'login' %}" class="text-blue-500 hover:text-blue-400 font-medium transition">Sign In</a>
                         </p>
                     </div>
 
@@ -71,8 +75,8 @@
                                 <label class="block text-sm font-medium text-gray-300 mb-2">I'm interested in</label>
                                 <div class="space-y-2">
                                     {% for key, label in categories %}
-                                    <label class="flex items-center gap-3 p-2.5 rounded-lg border border-gray-700/50 hover:border-blue-500/30 cursor-pointer transition bg-gray-800/30 hover:bg-gray-800/60">
-                                        <input type="checkbox" name="categories" value="{{ key }}" class="rounded bg-gray-800 border-gray-600 text-blue-600 focus:ring-blue-500">
+                                    <label class="flex items-center gap-3 p-2.5 rounded-lg border border-gray-700/50 hover:border-blue-600/30 cursor-pointer transition bg-gray-800/30 hover:bg-gray-800/60">
+                                        <input type="checkbox" name="categories" value="{{ key }}" class="rounded bg-gray-800 border-gray-600 text-blue-700 focus:ring-blue-600">
                                         <span class="text-sm text-gray-300">{{ label }}</span>
                                     </label>
                                     {% endfor %}
@@ -81,7 +85,7 @@
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-300 mb-2">Experience level</label>
-                                <select name="experience_level" class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-700 rounded-xl text-white text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                <select name="experience_level" class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-700 rounded-xl text-white text-sm focus:ring-2 focus:ring-blue-600 outline-none">
                                     <option value="">Any experience level</option>
                                     {% for key, label in experiences %}
                                     <option value="{{ key }}">{{ label }}</option>
@@ -92,11 +96,11 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-300 mb-2">Preferred location</label>
                                 <input type="text" name="preferred_location" placeholder="e.g. Bangalore, Remote, Mumbai"
-                                    class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                    class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 text-sm focus:ring-2 focus:ring-blue-600 outline-none">
                                 <p class="text-xs text-gray-500 mt-1.5">We'll prioritize jobs in your area</p>
                             </div>
 
-                            <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white py-2.5 rounded-xl font-semibold text-sm hover:from-blue-700 hover:to-blue-600 transition-all duration-300 shadow-lg shadow-blue-600/20 active:scale-[0.98] lg:hidden">
+                            <button type="submit" class="w-full bg-gradient-to-r from-blue-700 to-blue-600 text-white py-2.5 rounded-xl font-semibold text-sm hover:from-blue-800 hover:to-blue-700 transition-all duration-300 shadow-lg shadow-blue-700/20 active:scale-[0.98] lg:hidden">
                                 Create Account
                             </button>
                         </div>
