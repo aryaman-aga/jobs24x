@@ -60,8 +60,6 @@ services:
         sync: false
       - key: GOOGLE_OAUTH_CLIENT_SECRET
         sync: false
-      - key: SCHEDULER_ENABLED
-        value: "True"
       - key: SCRAPER_SECRET_TOKEN
         sync: false
       - key: ADZUNA_APP_ID

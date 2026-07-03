@@ -1,3 +1,6 @@
+import re
+from datetime import timedelta
+
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
 from django.contrib.auth.models import User
@@ -6,6 +9,7 @@ from django.http import HttpResponse, JsonResponse
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
+from django.db import IntegrityError, transaction
 from io import StringIO
 from django.core.management import call_command
 from apps.jobs.models import CATEGORY_CHOICES, EXPERIENCE_CHOICES
@@ -35,6 +39,31 @@ def scrape_now(request):
     if token != settings.SCRAPER_SECRET_TOKEN:
         return JsonResponse({'error': 'invalid token'}, status=403)
 
+    from apps.jobs.models import ScrapeLog
+
+    now = timezone.now()
+    cutoff = now - timedelta(hours=8)
+    last = ScrapeLog.objects.filter(status='completed').order_by('-started_at').first()
+
+    if last and last.started_at > cutoff:
+        next_due = last.started_at + timedelta(hours=8)
+        return JsonResponse({
+            'status': 'not_due',
+            'last_scrape': last.started_at.isoformat(),
+            'next_scrape_due': next_due.isoformat(),
+            'message': f'Next scrape due after {next_due.isoformat()}',
+        })
+
+    try:
+        with transaction.atomic():
+            log = ScrapeLog.objects.create(
+                run_type='webhook',
+                started_at=now,
+                status='running',
+            )
+    except IntegrityError:
+        return JsonResponse({'status': 'in_progress', 'message': 'Scrape already in progress'})
+
     out = StringIO()
     jobs_created = 0
     hackathons_created = 0
@@ -55,7 +84,6 @@ def scrape_now(request):
     except Exception as e:
         errors.append(f'daily_refresh: {e}')
 
-    import re
     output = out.getvalue()
     m = re.search(r'created (\d+) new jobs', output)
     if m:
@@ -63,6 +91,13 @@ def scrape_now(request):
     m = re.search(r'created (\d+) new hackathons', output)
     if m:
         hackathons_created = int(m.group(1))
+
+    log.status = 'completed' if not errors else 'failed'
+    log.jobs_created = jobs_created
+    log.hackathons_created = hackathons_created
+    log.error = '; '.join(errors) if errors else ''
+    log.completed_at = timezone.now()
+    log.save()
 
     return JsonResponse({
         'status': 'ok' if not errors else 'partial',
